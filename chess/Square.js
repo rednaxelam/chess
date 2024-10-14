@@ -12,8 +12,8 @@ class Square {
       throw new Error('coordinates must be an array of length 2')
     } else if (!Number.isInteger(coordinates[0]) || !Number.isInteger(coordinates[1])) {
       throw new Error('coordinates must be integers')
-    } else if (coordinates[0] < 1 || coordinates[0] > 8 || coordinates[1] < 1 || coordinates[1] > 8) {
-      throw new Error('coordinates for x and y values must be between 1 and 8')
+    } else if (coordinates[0] < 0 || coordinates[0] > 7 || coordinates[1] < 0 || coordinates[1] > 7) {
+      throw new Error('coordinates for x and y values must be between 0 and 7')
     }
 
     this.#piece = null
