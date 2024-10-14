@@ -15,8 +15,8 @@ class Piece {
       throw new Error('invalid piece type')
     } else if (!Number.isInteger(id)) {
       throw new Error('id must be an integer')
-    } else if (id < 0 || id > 32 ) {
-      throw new Error('id not an integer between 0 and 32')
+    } else if (id < 0 || id > 31 ) {
+      throw new Error('id not an integer between 0 and 31')
     } else if (Piece.#existingIds.has(id)) {
       throw new Error('id has already been assigned to another piece')
     }
@@ -67,6 +67,10 @@ class Piece {
   }
 
   promoteTo(newType) {
+    if (this.#type !== 'pawn') {
+      throw new Error('only pawns can be promoted')
+    }
+
     if (!Piece.#validPromotionTypes.has(newType)) {
       throw new Error(`not possible to promote pawn to ${newType}`)
     }
