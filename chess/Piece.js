@@ -1,6 +1,7 @@
 class Piece {
 
   static #validPieceTypes = new Set(['bishop', 'king', 'knight', 'pawn', 'queen', 'rook'])
+  static #validPromotionTypes = new Set(['bishop', 'knight', 'queen', 'rook'])
   static #existingIds = new Set()
 
   #id = null
@@ -65,6 +66,13 @@ class Piece {
     return this.#isPinned
   }
 
+  promoteTo(newType) {
+    if (!Piece.#validPromotionTypes.has(newType)) {
+      throw new Error(`not possible to promote pawn to ${newType}`)
+    }
+
+    this.#type = newType
+  }
 }
 
 module.exports = Piece
