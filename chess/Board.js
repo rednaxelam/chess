@@ -21,7 +21,7 @@ class Board {
       this.#board[1][i].setPiece(newWhitePawn)
 
       let newBlackPawn = new Piece(16 + i, 'pawn')
-      this.#board[6][i].setPiece(newWhitePawn)
+      this.#board[6][i].setPiece(newBlackPawn)
     }
 
     const pieceOrder = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
@@ -48,6 +48,47 @@ class Board {
     const pieceToMove = this.#getSquare(from).popPiece()
 
     this.#getSquare(to).setPiece(pieceToMove)
+  }
+
+  removePiece(coords) {
+    Board.#validateCoordinates(coords)
+
+    if (this.#getSquare(coords).isEmptySquare()) {
+      throw new Error('Not possible to remove piece from square that has no piece')
+    }
+
+    if (this.#getSquare(coords).getPiece().getType() === 'king') {
+      throw new Error('Not possible to remove a king from the board')
+    }
+
+    this.#getSquare(coords).popPiece()
+  }
+
+  promotePiece(coords, promoteTo) {
+    Board.#validateCoordinates(coords)
+
+    if (this.#getSquare(coords).isEmptySquare()) {
+      throw new Error('No piece occupying the square, promotion not possible')
+    }
+
+    const pieceToPromote = this.#getSquare(coords).getPiece()
+
+    if (pieceToPromote.getType() !== 'pawn') {
+      throw new Error('Not possible to promote a piece that is not a pawn')
+    } else if (pieceToPromote.getId() >= 0 && pieceToPromote.getId() <= 7) {
+      if (coords[0] !== 7) {
+        throw new Error('Not possible to promote white pawn that is not at its last rank')
+      }
+    } else {
+      if (coords[0] !== 0) {
+        throw new Error('Not possible to promote black pawn that is not at its last rank')
+      }
+    }
+
+    // Piece validations will throw an error if promoteTo is not a valid value, so that validation is not done here
+
+    pieceToPromote.promoteTo(promoteTo)
+
   }
 
   #getSquare(coords) {
