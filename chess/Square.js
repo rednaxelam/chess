@@ -1,20 +1,13 @@
 const Piece = require('./Piece')
+const utils = require('./utils')
 
 class Square {
 
   #piece
 
   constructor(coordinates) {
-    // the following checks are to help validate that the board is created in a way that you would expect
-    if (!Array.isArray(coordinates)) {
-      throw new Error('coordinates must be supplied as an array')
-    } else if (coordinates.length !== 2) {
-      throw new Error('coordinates must be an array of length 2')
-    } else if (!Number.isInteger(coordinates[0]) || !Number.isInteger(coordinates[1])) {
-      throw new Error('coordinates must be integers')
-    } else if (coordinates[0] < 0 || coordinates[0] > 7 || coordinates[1] < 0 || coordinates[1] > 7) {
-      throw new Error('coordinates for x and y values must be between 0 and 7')
-    }
+    // the following check is to help validate that the board is created in a way that you would expect
+    utils.validateCoordinates(coordinates)
 
     this.#piece = null
 
