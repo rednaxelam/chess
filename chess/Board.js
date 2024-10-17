@@ -91,6 +91,22 @@ class Board {
 
   }
 
+  isEmptySquare(coords) {
+    Board.#validateCoordinates(coords)
+
+    return this.#getSquare(coords).isEmptySquare()
+  }
+
+  getPiece(coords) {
+    Board.#validateCoordinates(coords)
+
+    if (this.#getSquare(coords).isEmptySquare()) {
+      throw new Error('Not possible to get piece from empty square')
+    }
+
+    return this.#getSquare(coords).getPiece()
+  }
+
   #getSquare(coords) {
     return this.#board[coords[0]][coords[1]]
   }
