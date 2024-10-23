@@ -1,5 +1,5 @@
-const Board = require('./Board')
-const PieceList = require('./PieceList')
+const Board = require('./board-components/Board')
+const PieceList = require('./board-components/PieceList')
 
 // This class will not duplicate validations done in imported classes
 
