@@ -34,6 +34,10 @@ class Piece {
     return this.#id
   }
 
+  getColor() {
+    return this.#id <= 15 ? 'white' : 'black'
+  }
+
   incrementMoveCount() {
     this.#moveCount = this.#moveCount + 1
   }

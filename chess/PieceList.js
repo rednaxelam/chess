@@ -7,7 +7,6 @@ const Board = require('./Board')
 class PieceList {
 
   #pieceList
-  #board
 
   constructor(board, color) {
 
@@ -16,7 +15,6 @@ class PieceList {
     }
 
     this.#pieceList = []
-    this.#board = board
 
     if (color === 'white') {
       for (let i = 0; i <= 1; i++) {
@@ -39,10 +37,6 @@ class PieceList {
 
   movePiece(from, to) {
     const pieceToMoveElement = this.#findPieceElement(from)
-
-    if (!this.#board.isEmptySquare(to)) {
-      throw new Error('Square is already occupied')
-    }
 
     pieceToMoveElement.coords = [to[0], to[1]]
 
@@ -136,7 +130,5 @@ class PieceListIterable {
   }
 
 }
-
-debugger
 
 module.exports = PieceList
