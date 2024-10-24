@@ -1,3 +1,5 @@
+const utils = require('./utils')
+
 class Piece {
 
   static #validPieceTypes = new Set(['bishop', 'king', 'knight', 'pawn', 'queen', 'rook'])
@@ -5,10 +7,11 @@ class Piece {
   static #existingIds = new Set()
 
   #id = null
-  #moveCount = null
+  #moveCount = 0
   #type = null
-  #isEnPassantable = null
-  #isPinned = null
+  #isEnPassantable = false
+  #pinningPiece = null
+  #pinOrigin = null
 
   constructor(id, type) {
     if (!Piece.#validPieceTypes.has(type)) {
@@ -24,10 +27,7 @@ class Piece {
     Piece.#existingIds.add(id)
 
     this.#id = id
-    this.#moveCount = 0
     this.#type = type
-    this.#isEnPassantable = false
-    this.#isPinned = false
   }
 
   getId() {
@@ -58,16 +58,52 @@ class Piece {
     return this.#isEnPassantable
   }
 
-  setIsPinned(isPinned) {
-    if (typeof isPinned !== 'boolean') {
-      throw new Error('Method requires a boolean argument')
-    }
-
-    this.#isPinned = isPinned
+  isPinned() {
+    return this.#pinningPiece !== null
   }
 
-  isPinned() {
-    return this.#isPinned
+  setPinningPiece(piece) {
+    if (!(piece instanceof Piece)) {
+      throw new Error('Argument must be of type Piece')
+    }
+
+    if ((this.#id <= 15 && piece.#id <= 15) || (this.#id >= 16 && piece.#id >= 16)) {
+      throw new Error('Piece can not be pinned by another piece of the same color')
+    }
+
+    if (piece.#type !== 'rook' && piece.#type !== 'bishop' && piece.#type !== 'queen') {
+      throw new Error('Piece can only be pinned by a piece of type queen, rook, or bishop')
+    }
+
+    this.#pinningPiece = piece
+  }
+
+  getPinningPiece() {
+    if (this.#pinningPiece) {
+      return this.#pinningPiece
+    } else {
+      throw new Error('There is no piece pinning this piece')
+    }
+  }
+
+  setPinOrigin(coords) {
+    utils.validateCoordinates(coords)
+
+    this.#pinOrigin = coords
+  }
+
+  getPinOrigin() {
+    if (this.#pinOrigin) {
+      return [this.#pinOrigin[0], this.#pinOrigin[1]]
+    } else {
+      throw new Error('There is no piece pinning this piece')
+    }
+  }
+
+  resetStatusEffects() {
+    this.#isEnPassantable = false
+    this.#pinningPiece = null
+    this.#pinOrigin = null
   }
 
   promoteTo(newType) {
