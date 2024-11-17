@@ -1,16 +1,21 @@
 const Board = require('./board-components/Board')
 const PieceList = require('./board-components/PieceList')
+const utils = require('./utils')
 
 // This class will not duplicate validations done in imported classes
 
 class AugmentedBoard {
 
+  #test
   #board
   #whitePieceList
   #blackPieceList
 
-  constructor() {
-    this.#board = new Board()
+  constructor(test = undefined) {
+    utils.validateTestParameter(test)
+    this.#test = test === 'test'
+
+    this.#board = new Board(test)
     this.#whitePieceList = new PieceList(this.#board, 'white')
     this.#blackPieceList = new PieceList(this.#board, 'black')
   }
@@ -65,6 +70,44 @@ class AugmentedBoard {
 
   #getPieceColor(coords) {
     return this.#board.getPiece(coords).getColor()
+  }
+
+  // methods for testing only
+
+  // this method should be used immediately after instantiating a board
+  /* the moveList takes an array as argument, with each entry containing an array with two coordinate elements representing a piece
+  and on its start position and where it should move to. Ensuring that start positions and end positions do not appear multiple times
+  is currently the responsibility of whoever is writing the test */
+  initialiseBoard(moveList) {
+    if (!this.#test) {
+      throw new Error('This method is only available while in testing mode. Instantiate a new board with a \'test\' argument to access it')
+    }
+
+    // if a square is true on this board, it should be empty on the actual board.
+    const emptySquareBoard = []
+
+    for (let i = 0; i <= 7; i++) {
+      emptySquareBoard[i] = []
+      for (let j = 0; j <= 7; j++) {
+        emptySquareBoard[i][j] = true
+      }
+    }
+
+    for (const move of moveList) {
+      emptySquareBoard[move[0][0]][move[0][1]] = false
+    }
+
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        if (!this.isEmptySquare([i, j]) && emptySquareBoard[i][j]) {
+          this.removePiece([i, j])
+        }
+      }
+    }
+
+    for (const move of moveList) {
+      this.movePiece(move[0], move[1])
+    }
   }
 }
 

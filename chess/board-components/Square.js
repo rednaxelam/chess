@@ -1,5 +1,5 @@
 const Piece = require('./Piece')
-const utils = require('./utils')
+const utils = require('../utils')
 
 class Square {
 

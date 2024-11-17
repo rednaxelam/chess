@@ -10,6 +10,13 @@ function validateCoordinates(coords) {
   }
 }
 
+function validateTestParameter(test) {
+  if (test !== 'test' && test !== undefined) {
+    throw new Error(`Unexpected argument ${test} received. Use 'test' for testing mode and don't supply an argument if not testing`)
+  }
+}
+
 module.exports = {
   validateCoordinates,
+  validateTestParameter,
 }

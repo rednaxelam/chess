@@ -1,12 +1,16 @@
 const Piece = require('./Piece')
 const Square = require('./Square')
-const utils = require('./utils')
+const utils = require('../utils')
 
 class Board {
 
+  #test
   #board
 
-  constructor() {
+  constructor(test = undefined) {
+    utils.validateTestParameter(test)
+    this.#test = test === 'test'
+
     this.#board = []
 
     for (let i = 0; i <= 7; i++) {
@@ -57,7 +61,7 @@ class Board {
       throw new Error('Not possible to remove piece from square that has no piece')
     }
 
-    if (this.#getSquare(coords).getPiece().getType() === 'king') {
+    if (this.#getSquare(coords).getPiece().getType() === 'king' && !this.#test) {
       throw new Error('Not possible to remove a king from the board')
     }
 

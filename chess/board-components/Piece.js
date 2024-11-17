@@ -1,10 +1,9 @@
-const utils = require('./utils')
+const utils = require('../utils')
 
 class Piece {
 
   static #validPieceTypes = new Set(['bishop', 'king', 'knight', 'pawn', 'queen', 'rook'])
   static #validPromotionTypes = new Set(['bishop', 'knight', 'queen', 'rook'])
-  static #existingIds = new Set()
 
   #id = null
   #moveCount = 0
@@ -20,11 +19,7 @@ class Piece {
       throw new Error('id must be an integer')
     } else if (id < 0 || id > 31 ) {
       throw new Error('id not an integer between 0 and 31')
-    } else if (Piece.#existingIds.has(id)) {
-      throw new Error('id has already been assigned to another piece')
     }
-
-    Piece.#existingIds.add(id)
 
     this.#id = id
     this.#type = type
@@ -40,6 +35,10 @@ class Piece {
 
   incrementMoveCount() {
     this.#moveCount = this.#moveCount + 1
+  }
+
+  getMoveCount() {
+    return this.#moveCount
   }
 
   getType() {

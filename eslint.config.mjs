@@ -1,6 +1,7 @@
-import globals from "globals";
+import globals from "globals"
 import stylisticJs from '@stylistic/eslint-plugin-js'
 import js from '@eslint/js'
+import pluginJest from 'eslint-plugin-jest'
 
 export default [
   js.configs.recommended,
@@ -43,6 +44,20 @@ export default [
       ],
       'no-console': 0,
       'no-unused-vars': 0,
+    },
+  },
+  {
+    files: ['**/*.test.js'],
+    plugins: { jest: pluginJest },
+    languageOptions: {
+      globals: pluginJest.environments.globals.globals,
+    },
+    rules: {
+      'jest/no-disabled-tests': 'warn',
+      'jest/no-focused-tests': 'error',
+      'jest/no-identical-title': 'error',
+      'jest/prefer-to-have-length': 'warn',
+      'jest/valid-expect': 'error',
     },
   },
   { 
