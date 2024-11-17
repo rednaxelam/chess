@@ -53,6 +53,15 @@ class OpponentControlInformation {
           this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, -1]))
         }
         break
+      case 'knight':
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [2, -1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [2, 1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-2, -1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-2, 1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, 2]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 2]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, -2]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, -2]))
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
@@ -89,7 +98,7 @@ class OpponentControlInformation {
   }
 
   #markSquare(piece, pieceCoords, coords) {
-    // if the coords argument do not represent valid board coordinates, then do nothing
+    // if the coords argument does not represent valid board coordinates, then do nothing
     if (!((coords[0] >= 0 && coords[0] <= 7) && (coords[1] >= 0 && coords[1] <= 7))) return
 
     if (this.#board.isEmptySquare(coords)) {
