@@ -36,7 +36,7 @@ describe('OpponentControlInformation Testing', () => {
       opponentControlInformation.expectState([[3, 0]], instanceVariables)
     })
 
-    test('Pawn marks control on friendly pieces, but not on opposing pieces', () => {
+    test('Pawns mark control on friendly pieces, but not on opposing pieces', () => {
       const testBoard = new AugmentedBoard('test')
       testBoard.initialiseBoard([[[6, 1], [5, 1]], [[6, 0], [4, 2]], [[0, 0], [4, 0]]])
       const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
@@ -79,11 +79,46 @@ describe('OpponentControlInformation Testing', () => {
       opponentControlInformation.expectState(controlCoords, instanceVariables)
     })
 
-    test('Knight marks control on friendly pieces, but not on opposing pieces', () => {
+    test('Knights mark control on friendly pieces, but not on opposing pieces', () => {
       const testBoard = new AugmentedBoard('test')
       testBoard.initialiseBoard([[[7, 1], [4, 0]], [[6, 0], [6, 1]], [[0, 3], [2, 1]]])
       const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
       opponentControlInformation.expectState([[6, 1], [5, 2], [3, 2], [5, 0], [5, 2]])
+    })
+  })
+
+  describe('King Effects', () => {
+
+    test('King marks control on empty squares', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 4], [3, 4]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState([[2, 3], [2, 4], [2, 5], [3, 3], [3, 5], [4, 3], [4, 4], [4, 5]])
+    })
+
+    test('King marks less Squares when obstructed by edges', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 4], [0, 7]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState([[0, 6], [1, 6], [1, 7]])
+
+      const testBoard2 = new AugmentedBoard('test')
+      testBoard2.initialiseBoard([[[7, 4], [2, 0]]])
+      const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'black', 'test')
+      opponentControlInformation2.expectState([[1, 0], [1, 1], [2, 1], [3, 1], [3, 0]])
+    })
+
+    test('Putting a king in check with another king leads to an exception', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 4], [0, 5]], [[7, 4], [0, 6]]])
+      expect(() => new OpponentControlInformation(testBoard, 'black', 'test')).toThrow()
+    })
+
+    test('Kings mark control on friendly pieces, but not on opposing pieces', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[7, 4], [5, 7]], [[6, 7], [4, 7]], [[1, 7], [5, 6]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
+      opponentControlInformation.expectState([[6, 7], [6, 6], [4, 6], [4, 7], [3, 6]])
     })
   })
 })

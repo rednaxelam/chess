@@ -62,6 +62,17 @@ class OpponentControlInformation {
         this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 2]))
         this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, -2]))
         this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, -2]))
+        break
+      case 'king':
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, -1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, 0]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [-1, 1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [0, -1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [0, 1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, -1]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 0]))
+        this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 1]))
+        break
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
@@ -109,7 +120,9 @@ class OpponentControlInformation {
         // the control board can be used to determine whether a king can move to a square. A king can't take a protected piece
         this.#setSquareAsControlled(coords)
       } else if (occupyingPiece.getType() === 'king') {
-        if (this.#hasKingInSingleCheck) {
+        if (piece.getType() === 'king') {
+          throw new Error('A king may not place another king in check')
+        } else if (this.#hasKingInSingleCheck) {
           this.#hasKingInDoubleCheck = true
           this.#hasKingInSingleCheck = false
           this.#checkingPiece = null
