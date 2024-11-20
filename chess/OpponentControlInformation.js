@@ -73,6 +73,8 @@ class OpponentControlInformation {
         this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 0]))
         this.#markSquare(piece, pieceCoords, this.#addDiff(pieceCoords, [1, 1]))
         break
+      case 'rook':
+        this.#markMoveLines(piece, pieceCoords, [0, 2])
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
@@ -127,6 +129,7 @@ class OpponentControlInformation {
           this.#hasKingInSingleCheck = false
           this.#checkingPiece = null
           this.#checkingPieceCoordinates = null
+          this.#kingCoordinates = null
         } else if (this.#hasKingInDoubleCheck) {
           throw new Error('Not possible for there to be a triple check')
         } else {
@@ -139,6 +142,86 @@ class OpponentControlInformation {
         // don't do anything if piece is opposite color and not a king
       }
     }
+  }
+
+  #markControlRay(piece, pieceCoords, increment) {
+    let currentCoords = [pieceCoords[0] + increment[0], pieceCoords[1] + increment[1]]
+    let hasEncounteredAnOpponentPiece = false
+    let continueFlag = true
+    let firstEncounteredOpponentPiece
+    while ((currentCoords[0] >= 0 && currentCoords[0] <= 7)
+          && (currentCoords[1] >= 0 && currentCoords[1] <= 7)
+          && continueFlag) {
+      if (this.#board.isEmptySquare(currentCoords)) {
+        if (!hasEncounteredAnOpponentPiece) {
+          this.#setSquareAsControlled(currentCoords)
+        }
+      } else {
+        const occupyingPiece = this.#board.getPiece(currentCoords)
+        if (occupyingPiece.getColor() === this.#color) {
+          if (!hasEncounteredAnOpponentPiece) {
+            this.#setSquareAsControlled(currentCoords)
+          }
+          continueFlag = false
+        } else if (!(occupyingPiece.getType() === 'king')) {
+          if (!hasEncounteredAnOpponentPiece) {
+            hasEncounteredAnOpponentPiece = true
+            firstEncounteredOpponentPiece = occupyingPiece
+          } else {
+            continueFlag = false
+          }
+        } else {
+          // this case handles when an opponent king is encountered
+          if (hasEncounteredAnOpponentPiece) {
+            firstEncounteredOpponentPiece.setPinningPiece(piece)
+            firstEncounteredOpponentPiece.setPinOrigin(pieceCoords)
+            continueFlag = false
+          } else {
+            if (this.#hasKingInSingleCheck) {
+              this.#hasKingInDoubleCheck = true
+              this.#hasKingInSingleCheck = false
+              this.#checkingPiece = null
+              this.#checkingPieceCoordinates = null
+              this.#kingCoordinates = null
+              continueFlag = false
+            } else if (this.#hasKingInDoubleCheck) {
+              throw new Error('Not possible for there to be a triple check')
+            } else {
+              this.#hasKingInSingleCheck = true
+              this.#checkingPiece = piece
+              this.#checkingPieceCoordinates = pieceCoords
+              this.#kingCoordinates = currentCoords
+              continueFlag = false
+            }
+          }
+        }
+      }
+      currentCoords = [currentCoords[0] + increment[0], currentCoords[1] + increment[1]]
+    }
+  }
+
+  // moveLine 0 is vertical, 1 is from the south west to the north east, 2 is vertical, and 3 is from south east to north west
+
+  #markMoveLines(piece, pieceCoords, lineNumberArray) {
+    for (const lineNumber of lineNumberArray) {
+      if (!Number.isSafeInteger(lineNumber) || lineNumber < 0 || lineNumber > 3) {
+        throw new Error('lineNumbers must be integers between 0 and 3 inclusive')
+      }
+    }
+
+    const lineIncrementList = {
+      0: [1, 0],
+      1: [1, 1],
+      2: [0, 1],
+      3: [1, -1],
+    }
+
+    for (const lineNumber of lineNumberArray) {
+      const lineIncrement = lineIncrementList[lineNumber]
+      this.#markControlRay(piece, pieceCoords, lineIncrement)
+      this.#markControlRay(piece, pieceCoords, [-lineIncrement[0], -lineIncrement[1]])
+    }
+
   }
 
   #addDiff(coords, diff) {
@@ -158,7 +241,7 @@ class OpponentControlInformation {
   // methods for testing only
 
   // controlCoords is an array of coordinates (length 2 arrays with two numbers greater than 0 and less than 7) that represent which
-  expectState(controlCoords = null, instanceVariables = null, pins = null) {
+  expectState(controlCoords = undefined, instanceVariables = undefined, pins = undefined) {
     if (!this.#test) {
       throw new Error('This method is only available in testing mode.')
     }
