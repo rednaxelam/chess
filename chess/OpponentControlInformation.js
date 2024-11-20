@@ -296,13 +296,28 @@ class OpponentControlInformation {
 
         if (pinningPiece.getId() !== pinnedPiece.getPinningPiece().getId()) {
           throw new Error(`pinning piece stored for piece at [${pin.location[0]}, ${pin.location[1]}] is different
-            to that supplied as an argument`)
+            to that supplied in the argument`)
         }
 
         if (pinnedPiece.getPinOrigin()[0] !== pin.origin[0] || pinnedPiece.getPinOrigin()[1] !== pin.origin[1]) {
           throw new Error(`pin origin for piece at [${pin.location[0]}, ${pin.location[1]}] does not match
             supplied pin origin`)
         }
+      }
+
+      let numPins = 0
+      for (let i = 0; i <= 7; i++) {
+        for (let j = 0; j <= 7; j++) {
+          if (!this.#board.isEmptySquare([i, j]) && this.#board.getPiece([i, j]).isPinned()) {
+            numPins++
+          }
+        }
+      }
+
+      if (numPins > pins.length) {
+        throw new Error(`Pins argument contained ${pins.length} pin(s), actual number of pin(s) was ${numPins}`)
+      } else if (numPins < pins.length) {
+        throw new Error('The number of pins provided exceeds the number of pins currently on the board. All pins supplied as an argument must be unique. Investigate implementation of classes used in OpponentControlInformation class if this is the case.')
       }
     }
   }
