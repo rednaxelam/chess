@@ -1,4 +1,5 @@
 const Board = require('./Board')
+const utils = require('../utils')
 
 // this class will be used with the Board class which validates coordinates, so will not validate them again
 // the class will also not duplicate other Board validations
@@ -6,9 +7,12 @@ const Board = require('./Board')
 
 class PieceList {
 
+  #test
   #pieceList
 
-  constructor(board, color) {
+  constructor(board, color, test = undefined) {
+    utils.validateTestParameter(test)
+    this.#test = test === 'test'
 
     if (!(board instanceof Board)) {
       throw new Error('PieceList constructor requires a Board argument')
@@ -95,6 +99,18 @@ class PieceList {
     return pieceElementIndex
   }
 
+  // methods for testing only
+
+  // the responsibility for ensuring that pieces of a different color are not added to the PieceList is given to the tester
+  setPiece(piece, coords) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    this.#pieceList.push({ coords: coords, piece: piece })
+
+    this.#sortPieceList()
+  }
 }
 
 class PieceListIterable {

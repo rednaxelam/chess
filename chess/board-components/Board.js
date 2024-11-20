@@ -116,6 +116,21 @@ class Board {
   }
 
   static #validateCoordinates = utils.validateCoordinates
+
+  // methods for testing only
+
+  // responsibility for ensuring that pieces are not set to multiple squares is given to the tester
+  setPiece(piece, coords) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+    Board.#validateCoordinates(coords)
+    if (!(piece instanceof Piece)) {
+      throw new Error('piece supplied as argument is not an instance of Piece')
+    }
+
+    this.#getSquare(coords).setPiece(piece)
+  }
 }
 
 module.exports = Board

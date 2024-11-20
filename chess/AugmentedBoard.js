@@ -16,8 +16,8 @@ class AugmentedBoard {
     this.#test = test === 'test'
 
     this.#board = new Board(test)
-    this.#whitePieceList = new PieceList(this.#board, 'white')
-    this.#blackPieceList = new PieceList(this.#board, 'black')
+    this.#whitePieceList = new PieceList(this.#board, 'white', test)
+    this.#blackPieceList = new PieceList(this.#board, 'black', test)
   }
 
   movePiece(from, to) {
@@ -74,39 +74,50 @@ class AugmentedBoard {
 
   // methods for testing only
 
+  // responsibility for ensuring that pieces are not set to multiple squares is given to the tester
+  setPiece(piece, coords) {
+    if (!this.#test) {
+      throw new Error('This method is only available while in testing mode. Instantiate a new board with a \'test\' argument to access it')
+    }
+
+    this.#board.setPiece(piece, coords)
+
+    const pieceColor = this.#getPieceColor(coords)
+
+    if (pieceColor === 'white') {
+      this.#whitePieceList.setPiece(piece, coords)
+    } else {
+      this.#blackPieceList.setPiece(piece, coords)
+    }
+  }
+
   // this method should be used immediately after instantiating a board
   /* the moveList takes an array as argument, with each entry containing an array with two coordinate elements representing a piece
-  and on its start position and where it should move to. Ensuring that start positions and end positions do not appear multiple times
-  is currently the responsibility of whoever is writing the test */
+  and on its start position and where it should move to. Ensuring that start positions do not appear multiple times and end positions
+  do not appear multiple times is currently the responsibility of whoever is writing the test */
   initialiseBoard(moveList) {
     if (!this.#test) {
       throw new Error('This method is only available while in testing mode. Instantiate a new board with a \'test\' argument to access it')
     }
 
-    // if a square is true on this board, it should be empty on the actual board.
-    const emptySquareBoard = []
-
-    for (let i = 0; i <= 7; i++) {
-      emptySquareBoard[i] = []
-      for (let j = 0; j <= 7; j++) {
-        emptySquareBoard[i][j] = true
-      }
-    }
+    const pieces = []
 
     for (const move of moveList) {
-      emptySquareBoard[move[0][0]][move[0][1]] = false
+      pieces.push(this.getPiece(move[0]))
     }
 
     for (let i = 0; i <= 7; i++) {
       for (let j = 0; j <= 7; j++) {
-        if (!this.isEmptySquare([i, j]) && emptySquareBoard[i][j]) {
+        if (!this.isEmptySquare([i, j])) {
           this.removePiece([i, j])
         }
       }
     }
 
-    for (const move of moveList) {
-      this.movePiece(move[0], move[1])
+    let i = 0
+    for (const piece of pieces) {
+      this.setPiece(piece, moveList[i][1])
+      i++
     }
   }
 }
