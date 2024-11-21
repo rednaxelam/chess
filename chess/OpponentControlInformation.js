@@ -270,18 +270,36 @@ class OpponentControlInformation {
     }
 
     if (instanceVariables) {
-      if (instanceVariables.hasKingInSingleCheck !== this.#hasKingInSingleCheck) {
-        throw new Error('hasKingInSingleCheck property does not match')
-      } else if (instanceVariables.checkingPieceId !== this.#checkingPiece.getId()) {
-        throw new Error('Checking piece does not match')
-      } else if (instanceVariables.checkingPieceCoordinates[0] !== this.#checkingPieceCoordinates[0]
-            || instanceVariables.checkingPieceCoordinates[1] !== this.#checkingPieceCoordinates[1]) {
-        throw new Error('Coordinates for checking piece do not match')
-      } else if (instanceVariables.kingCoordinates[0] !== this.#kingCoordinates[0]
-            || instanceVariables.kingCoordinates[1] !== this.#kingCoordinates[1]) {
-        throw new Error('Coordinates for the king do not match')
-      } else if (instanceVariables.hasKingInDoubleCheck !== this.#hasKingInDoubleCheck) {
-        throw new Error('hasKingInDoubleCheck property does not match')
+      if (instanceVariables === 'default') {
+        if (this.#hasKingInSingleCheck || this.#hasKingInDoubleCheck) {
+          throw new Error('King is in check when it was not expected to be in check')
+        } else if (this.#checkingPiece !== null
+          || this.#checkingPieceCoordinates !== null
+          || this.#kingCoordinates !== null) {
+          throw new Error('Non-boolean auxiliary instance variables are not all null')
+        }
+      } else if (instanceVariables === 'double') {
+        if (this.#hasKingInSingleCheck || !this.#hasKingInDoubleCheck) {
+          throw new Error('King is not in a double check when it was expected to be in a double check')
+        } else if (this.#checkingPiece !== null
+          || this.#checkingPieceCoordinates !== null
+          || this.#kingCoordinates !== null) {
+          throw new Error('Non-boolean auxiliary instance variables are not all null')
+        }
+      } else {
+        if (instanceVariables.hasKingInSingleCheck !== this.#hasKingInSingleCheck) {
+          throw new Error('hasKingInSingleCheck property does not match')
+        } else if (instanceVariables.checkingPieceId !== this.#checkingPiece.getId()) {
+          throw new Error('Checking piece does not match')
+        } else if (instanceVariables.checkingPieceCoordinates[0] !== this.#checkingPieceCoordinates[0]
+              || instanceVariables.checkingPieceCoordinates[1] !== this.#checkingPieceCoordinates[1]) {
+          throw new Error('Coordinates for checking piece do not match')
+        } else if (instanceVariables.kingCoordinates[0] !== this.#kingCoordinates[0]
+              || instanceVariables.kingCoordinates[1] !== this.#kingCoordinates[1]) {
+          throw new Error('Coordinates for the king do not match')
+        } else if (instanceVariables.hasKingInDoubleCheck !== this.#hasKingInDoubleCheck) {
+          throw new Error('hasKingInDoubleCheck property does not match')
+        }
       }
     }
 
