@@ -231,6 +231,109 @@ describe('OpponentControlInformation Testing', () => {
         []
       )
     })
+  })
+
+  describe('Bishop Effects', () => {
+
+    test('Bishop marks control on empty squares', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 2], [0, 0]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7]])
+
+      const testBoard2 = new AugmentedBoard('test')
+      testBoard2.initialiseBoard([[[7, 5], [5, 5]]])
+      const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'black', 'test')
+      opponentControlInformation2.expectState([[6, 6], [7, 7], [4, 6], [3, 7], [6, 4], [7, 3], [4, 4], [3, 3], [2, 2], [1, 1], [0, 0]])
+    })
+
+    test('Bishop stops marking control on squares in a given direction when obstructed by a piece', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 5], [2, 5]], [[1, 0], [3, 4]], [[6, 0], [3, 6]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState([[3, 4], [1, 6], [0, 7], [1, 4], [0, 3], [4, 3], [4, 5]])
+    })
+
+    test('Bishop marks control on unobstructed friendly pieces, but not on opposing pieces', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[7, 5], [1, 5]], [[6, 5], [0, 4]], [[1, 5], [0, 6]], [[1, 0], [2, 6]], [[6, 0], [3, 7]], [[6, 1], [3, 3]], [[1, 1], [5, 1]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
+      opponentControlInformation.expectState([[0, 4], [2, 4], [3, 3], [2, 2], [2, 4]])
+    })
+
+    test('Bishop does not mark contol on an obstructed friendly piece', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 2], [0, 0]], [[6, 0], [2, 2]], [[1, 0], [4, 4]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState([[1, 1], [5, 3], [5, 5]])
+    })
+
+    test('Bishop pins opponent pieces correctly', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 5], [0, 7]], [[6, 0], [1, 6]], [[7, 4], [2, 5]], [[0, 2], [7, 0]], [[6, 1], [4, 3]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+      opponentControlInformation.expectState(
+        [[6, 1], [5, 2]],
+        'default',
+        [{ origin: [7, 0], location: [4, 3] }, { origin: [0, 7], location: [1, 6] }]
+      )
+
+      const testBoard2 = new AugmentedBoard('test')
+      testBoard2.initialiseBoard([[[7, 2], [7, 7]], [[6, 0], [6, 6]], [[0, 4], [4, 4]], [[7, 2], [0, 0]], [[1, 0], [1, 1]], [[6, 1], [3, 3]]])
+      const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'black', 'test')
+      opponentControlInformation2.expectState(
+        [[6, 6], [5, 5], [5, 7], [2, 2], [2, 4]],
+        'default',
+        []
+      )
+
+      const testBoard3 = new AugmentedBoard('test')
+      testBoard3.initialiseBoard([[[0, 2], [7, 0]], [[6, 0], [5, 2]], [[6, 1], [4, 3]], [[7, 4], [3, 4]], [[1, 0], [2, 5]], [[1, 1], [1, 6]], [[0, 5], [0, 7]]])
+      const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'white', 'test')
+      opponentControlInformation3.expectState(
+        [[6, 1], [1, 6], [2, 5], [2, 7], [3, 6]],
+        createInstanceVariablesComparisonObject(true, 0, [2, 5], [3, 4], false),
+        []
+      )
+
+      const testBoard4 = new AugmentedBoard('test')
+      testBoard4.initialiseBoard([[[0, 2], [0, 0]], [[1, 0], [1, 1]], [[6, 0], [2, 2]], [[7, 4], [3, 3]], [[0, 5], [7, 7]]])
+      const opponentControlInformation4 = new OpponentControlInformation(testBoard4, 'white', 'test')
+      opponentControlInformation4.expectState(
+        [[1, 1], [2, 0], [4, 4], [5, 5], [6, 6]],
+        createInstanceVariablesComparisonObject(true, 13, [7, 7], [3, 3], false),
+        []
+      )
+    })
+
+    test('Bishop puts king in check when path to king is unobstructed, with instance variables correctly updated', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[7, 5], [7, 0]], [[0, 4], [0, 7]]])
+      const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
+      opponentControlInformation.expectState(
+        [[6, 1], [5, 2], [4, 3], [3, 4], [2, 5], [1, 6]],
+        createInstanceVariablesComparisonObject(true, 29, [7, 0], [0, 7], false),
+        []
+      )
+
+      const testBoard2 = new AugmentedBoard('test')
+      testBoard2.initialiseBoard([[[0, 5], [0, 7]], [[7, 4], [1, 6]], [[6, 0], [7, 0]]])
+      const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'white', 'test')
+      opponentControlInformation2.expectState(
+        [],
+        createInstanceVariablesComparisonObject(true, 13, [0, 7], [1, 6], false),
+        []
+      )
+
+      const testBoard3 = new AugmentedBoard('test')
+      testBoard3.initialiseBoard([[[0, 2], [0, 0]], [[7, 4], [1, 1]], [[0, 5], [7, 7]]])
+      const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'white', 'test')
+      opponentControlInformation3.expectState(
+        [[2, 2], [3, 3], [4, 4], [5, 5], [6, 6]],
+        'double',
+        []
+      )
+    })
 
   })
 })

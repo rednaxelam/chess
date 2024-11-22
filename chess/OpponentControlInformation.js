@@ -75,6 +75,10 @@ class OpponentControlInformation {
         break
       case 'rook':
         this.#markMoveLines(piece, pieceCoords, [0, 2])
+        break
+      case 'bishop':
+        this.#markMoveLines(piece, pieceCoords, [1, 3])
+        break
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
