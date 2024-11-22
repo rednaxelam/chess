@@ -335,5 +335,53 @@ describe('OpponentControlInformation Testing', () => {
       )
     })
 
+    describe('Queen Effects', () => {
+      test('Queen marks control on empty squares', () => {
+        const testBoard = new AugmentedBoard('test')
+        testBoard.initialiseBoard([[[0, 3], [3, 3]]])
+        const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+        opponentControlInformation.expectState([[2, 2], [1, 1], [0, 0], [2, 3], [1, 3], [0, 3], [2, 4], [1, 5],
+          [0, 6], [3, 4], [3, 5], [3, 6], [3, 7], [4, 4], [5, 5], [6, 6], [7, 7], [4, 3], [5, 3], [6, 3],
+          [7, 3], [4, 2], [5, 1], [6, 0], [3, 2], [3, 1], [3, 0]])
+      })
+
+      /* As desired and as is currently implemented by the code, the queen has the behaviour of the bishop combined with the behaviour
+      of the rook. Because the bishop and rook behave as expected, extensive testing for the queen will not be done. */
+
+      test('Queen doesn\'t behave in an unexpected way', () => {
+        const testBoard = new AugmentedBoard('test')
+        testBoard.initialiseBoard([[[0, 3], [2, 2]], [[1, 0], [1, 2]], [[6, 0], [1, 3]], [[6, 1], [2, 5]], [[1, 1], [5, 5]],
+          [[7, 7], [3, 2]], [[7, 4], [5, 2]], [[7, 0], [7, 2]], [[1, 2], [3, 1]], [[1, 3], [4, 0]], [[1, 4], [2, 1]],
+          [[6, 2], [2, 0]], [[6, 3], [1, 1]], [[1, 5], [0, 0]]])
+        const opponentControlInformation = new OpponentControlInformation(testBoard, 'white', 'test')
+        opponentControlInformation.expectState(
+          [[1, 2], [2, 1], [2, 3], [2, 4], [3, 3], [4, 4], [5, 5], [6, 4], [6, 6], [3, 1], [4, 0], [4, 2], [5, 1], [2, 1], [3, 0]],
+          'default',
+          [{ origin: [2, 2], location: [3, 2] }]
+        )
+
+        const testBoard2 = new AugmentedBoard('test')
+        testBoard2.initialiseBoard([[[7, 3], [0, 0]], [[6, 0], [0, 7]], [[6, 1], [0, 6]], [[0, 4], [0, 5]],
+          [[1, 0], [1, 0]], [[1, 1], [1, 1]], [[1, 2], [1, 6]], [[1, 3], [2, 6]], [[1, 4], [3, 6]], [[1, 5], [3, 7]]])
+        testBoard2.promotePiece([0, 7], 'queen')
+        testBoard2.promotePiece([0, 6], 'queen')
+        testBoard2.movePiece([0, 6], [2, 7])
+        const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'black', 'test')
+        opponentControlInformation2.expectState(
+          [[0, 1], [0, 2], [0, 3], [0, 4], [0, 6], [0, 7], [1, 7], [2, 7]],
+          'double',
+          [{ origin: [2, 7], location: [1, 6] }]
+        )
+
+        const testBoard3 = new AugmentedBoard('test')
+        testBoard3.initialiseBoard([[[7, 3], [7, 0]], [[1, 0], [7, 1]], [[1, 1], [6, 1]], [[0, 4], [5, 0]], [[6, 0], [4, 0]], [[1, 2], [3, 0]]])
+        const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'black', 'test')
+        opponentControlInformation3.expectState(
+          [[6, 0], [3, 1]],
+          createInstanceVariablesComparisonObject(true, 27, [7, 0], [5, 0], false),
+          []
+        )
+      })
+    })
   })
 })
