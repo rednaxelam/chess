@@ -21,6 +21,8 @@ class AugmentedBoard {
   }
 
   movePiece(from, to) {
+    from = [from[0], from[1]]
+    to = [to[0], to[1]]
     const pieceColor = this.#getPieceColor(from)
 
     this.#board.movePiece(from, to)

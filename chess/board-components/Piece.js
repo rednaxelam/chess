@@ -87,6 +87,7 @@ class Piece {
 
   setPinOrigin(coords) {
     utils.validateCoordinates(coords)
+    coords = [coords[0], coords[1]]
 
     this.#pinOrigin = coords
   }

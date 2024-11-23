@@ -109,12 +109,12 @@ class OpponentControlInformation {
 
   getCheckingPieceCoordinates() {
     this.#validateKingInSingleCheck()
-    return this.#checkingPieceCoordinates
+    return [this.#checkingPieceCoordinates[0], this.#checkingPieceCoordinates[1]]
   }
 
   getKingCoordinates() {
     this.#validateKingInSingleCheck()
-    return this.#kingCoordinates
+    return [this.#kingCoordinates[0], this.#kingCoordinates[1]]
   }
 
   #markSquare(piece, pieceCoords, coords) {
@@ -142,8 +142,8 @@ class OpponentControlInformation {
         } else {
           this.#hasKingInSingleCheck = true
           this.#checkingPiece = piece
-          this.#checkingPieceCoordinates = pieceCoords
-          this.#kingCoordinates = coords
+          this.#checkingPieceCoordinates = [pieceCoords[0], pieceCoords[1]]
+          this.#kingCoordinates = [coords[0], coords[1]]
         }
       } else {
         // don't do anything if piece is opposite color and not a king
@@ -181,7 +181,7 @@ class OpponentControlInformation {
           // this case handles when an opponent king is encountered
           if (hasEncounteredAnOpponentPiece) {
             firstEncounteredOpponentPiece.setPinningPiece(piece)
-            firstEncounteredOpponentPiece.setPinOrigin(pieceCoords)
+            firstEncounteredOpponentPiece.setPinOrigin([pieceCoords[0], pieceCoords[1]])
             continueFlag = false
           } else {
             if (this.#hasKingInSingleCheck) {
@@ -196,8 +196,8 @@ class OpponentControlInformation {
             } else {
               this.#hasKingInSingleCheck = true
               this.#checkingPiece = piece
-              this.#checkingPieceCoordinates = pieceCoords
-              this.#kingCoordinates = currentCoords
+              this.#checkingPieceCoordinates = [pieceCoords[0], pieceCoords[1]]
+              this.#kingCoordinates = [currentCoords[0], currentCoords[1]]
               continueFlag = false
             }
           }
@@ -225,7 +225,7 @@ class OpponentControlInformation {
 
     for (const lineNumber of lineNumberArray) {
       const lineIncrement = lineIncrementList[lineNumber]
-      this.#markControlRay(piece, pieceCoords, lineIncrement)
+      this.#markControlRay(piece, pieceCoords, [lineIncrement[0], lineIncrement[1]])
       this.#markControlRay(piece, pieceCoords, [-lineIncrement[0], -lineIncrement[1]])
     }
 

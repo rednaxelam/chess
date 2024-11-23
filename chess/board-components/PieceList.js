@@ -103,6 +103,7 @@ class PieceList {
 
   // the responsibility for ensuring that pieces of a different color are not added to the PieceList is given to the tester
   setPiece(piece, coords) {
+    coords = [coords[0], coords[1]]
     if (!this.#test) {
       throw new Error('This method is only available in testing mode.')
     }
