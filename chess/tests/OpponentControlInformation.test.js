@@ -384,4 +384,13 @@ describe('OpponentControlInformation Testing', () => {
       )
     })
   })
+
+  describe('Effects not specific to pieces', () => {
+    // it is impossible for a king to be put in triple check under the rules typically used for chess
+    test('Putting a king in triple check throws an error', () => {
+      const testBoard = new AugmentedBoard('test')
+      testBoard.initialiseBoard([[[0, 0], [7, 0]], [[0, 6], [5, 5]], [[0, 3], [6, 4]], [[7, 4], [7, 4]]])
+      expect(() => new OpponentControlInformation(testBoard, 'white', 'test')).toThrow()
+    })
+  })
 })
