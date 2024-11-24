@@ -91,6 +91,7 @@ class OpponentControlInformation {
   }
 
   squareIsControlled(coords) {
+    utils.validateCoordinates(coords)
     return this.#controlBoard[coords[0]][coords[1]]
   }
 
