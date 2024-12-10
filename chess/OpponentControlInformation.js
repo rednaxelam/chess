@@ -118,6 +118,10 @@ class OpponentControlInformation {
     return [this.#kingCoordinates[0], this.#kingCoordinates[1]]
   }
 
+  getColor() {
+    return this.#color
+  }
+
   #markSquare(piece, pieceCoords, coords) {
     // if the coords argument does not represent valid board coordinates, then do nothing
     if (!((coords[0] >= 0 && coords[0] <= 7) && (coords[1] >= 0 && coords[1] <= 7))) return
