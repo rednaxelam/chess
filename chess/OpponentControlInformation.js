@@ -212,7 +212,7 @@ class OpponentControlInformation {
     }
   }
 
-  // moveLine 0 is vertical, 1 is from the south west to the north east, 2 is vertical, and 3 is from south east to north west
+  // moveLine 0 is vertical, 1 is from the south west to the north east, 2 is horizontal, and 3 is from south east to north west (direction doesn't matter)
 
   #markMoveLines(piece, pieceCoords, lineNumberArray) {
     for (const lineNumber of lineNumberArray) {
