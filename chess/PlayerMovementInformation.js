@@ -74,7 +74,7 @@ class PlayerMovementInformation {
 
   isValidMove(from, to) {
     if (this.#MoveBoard[from[0]][from[1]] === null) {
-      throw new Error('There is no piece to move at given start coordinates')
+      throw new Error('There is no player piece to move at given start coordinates')
     }
 
     const moveArray = this.#MoveBoard[from[0]][from[1]]
@@ -105,7 +105,7 @@ class PlayerMovementInformation {
     const possibleMoves = []
 
     // if pinStatus is -1, then the piece is not pinned. If not, it means that it is pinned along the corresponding moveline
-    const pinStatus = !pawn.isPinned() ? -1 : this.#calcMoveLine(startCoords, pawn.getPinningPiece())
+    const pinStatus = !pawn.isPinned() ? -1 : this.#calcMoveLine(startCoords, pawn.getPinOrigin())
 
     const getNewPosition = color === 'white' ? this.#addDiff : this.#subtractDiff
 
@@ -185,7 +185,7 @@ class PlayerMovementInformation {
             if (board.getPiece(currentCoords).getType() === 'pawn'
                 && board.getPiece(currentCoords).isEnPassantable()) {
 
-              possibleMoves.push(getNewPosition(startCoords, [1, currentCoords[1]]))
+              possibleMoves.push(getNewPosition(startCoords, [1, increment[1]]))
             }
           } else {
             possibleMoves.push(currentCoords)
@@ -256,7 +256,7 @@ class PlayerMovementInformation {
     }
 
     if (this.#MoveBoard[pieceCoords[0]][pieceCoords[1]] === null) {
-      throw new Error('There is no piece occupying the square at the given coordinates')
+      throw new Error('There is no player piece occupying the square at the given coordinates')
     }
 
     const actualMoveArray = this.#MoveBoard[pieceCoords[0]][pieceCoords[1]]
