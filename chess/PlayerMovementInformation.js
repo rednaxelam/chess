@@ -65,6 +65,10 @@ class PlayerMovementInformation {
         moveArray = this.#findPawnMoves(board, startCoords, color, opponentControlInformation, moveRemovesCheck)
         this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
         break
+      case 'knight':
+        moveArray = this.#findKnightMoves(board, startCoords, color, opponentControlInformation, moveRemovesCheck)
+        this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
+        break
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
@@ -191,6 +195,46 @@ class PlayerMovementInformation {
             possibleMoves.push(currentCoords)
           }
         }
+      }
+    }
+
+    return possibleMoves
+  }
+
+  #findKnightMoves(board, startCoords, color, opponentControlInformation, moveRemovesCheck) {
+    this.#validatePieceType(board, startCoords, 'knight')
+
+    if (opponentControlInformation.hasKingInDoubleCheck()) {
+      return []
+    }
+
+    const knight = board.getPiece(startCoords)
+
+    // if a piece is pinned, it must move along the line segment from the king to (and including) the pinning piece
+    // it is impossible for a knight which is on such a line segment to move in a way such that it is still on that line segment
+    // because of this, a pinned knight can't move
+    if (knight.isPinned()) {
+      return []
+    }
+
+    const possibleMoves = []
+
+    const possibleIncrements = [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2]]
+
+    if (!opponentControlInformation.hasKingInSingleCheck()) {
+      for (const increment of possibleIncrements) {
+        const currentCoords = this.#addDiff(startCoords, increment)
+        if (this.#isValidCoords(currentCoords)
+            && (board.isEmptySquare(currentCoords) || board.getPiece(currentCoords).getColor() !== color)) {
+          possibleMoves.push(currentCoords)
+        }
+      }
+    }
+
+    if (opponentControlInformation.hasKingInSingleCheck()) {
+      for (const increment of possibleIncrements) {
+        const currentCoords = this.#addDiff(startCoords, increment)
+        if (this.#isValidCoords(currentCoords) && moveRemovesCheck(currentCoords)) possibleMoves.push(currentCoords)
       }
     }
 
