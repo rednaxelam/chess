@@ -241,6 +241,37 @@ class PlayerMovementInformation {
     return possibleMoves
   }
 
+  #findMovesAlongRay(board, startCoords, color, opponentControlInformation, moveRemovesCheck, increment) {
+    const possibleMoves = []
+
+    if (!opponentControlInformation.hasKingInSingleCheck()) {
+      let currentCoords = this.#addDiff(startCoords, increment)
+      while (this.#isValidCoords(currentCoords) && board.isEmptySquare(currentCoords)) {
+        possibleMoves.push(currentCoords)
+        currentCoords = this.#addDiff(startCoords, increment)
+      }
+
+      if (this.#isValidCoords(currentCoords) && board.getPiece(currentCoords).getColor() !== color) {
+        possibleMoves.push(currentCoords)
+      }
+    }
+
+    if (opponentControlInformation.hasKingInSingleCheck()) {
+      let currentCoords = this.#addDiff(startCoords, increment)
+      while (this.#isValidCoords(currentCoords)
+            && board.isEmptySquare(currentCoords)
+            && !moveRemovesCheck(currentCoords)) {
+        currentCoords = this.#addDiff(startCoords, increment)
+      }
+
+      if (this.#isValidCoords(currentCoords) && moveRemovesCheck(currentCoords)) {
+        possibleMoves.push(currentCoords)
+      }
+    }
+
+    return possibleMoves
+  }
+
   // moveLine 0 is vertical, 1 is from the south west to the north east, 2 is horizontal, and 3 is from south east to north west (direction doesn't matter)
 
   #calcMoveLine(coords1, coords2) {
