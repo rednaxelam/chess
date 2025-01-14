@@ -272,6 +272,70 @@ class PlayerMovementInformation {
     return possibleMoves
   }
 
+  #findMovesAlongMoveLines(board, startCoords, color, opponentControlInformation, moveRemovesCheck) {
+    const piece = board.getPiece(startCoords)
+
+    const pieceType = piece.getType()
+    if (pieceType !== 'bishop' && pieceType !== 'rook' && pieceType !== 'queen') {
+      throw new Error('this method can only be used for queens, rooks, and bishops')
+    }
+
+    if (opponentControlInformation.hasKingInDoubleCheck()) {
+      return []
+    }
+
+    const pinStatus = !piece.isPinned() ? -1 : this.#calcMoveLine(startCoords, piece.getPinOrigin())
+
+    // if pinned, the checking piece can't lie on the path from the king to the pinning piece, because otherwise there would not be a pin
+    // moving off of this path to take the checking piece would mean exposing the king to another check, which is not allowed
+    // if the checking piece is a bishop, rook, or queen, then the path from it to the king can't intersect the path from the pinning piece to the king (the path not including the king in this case)
+    // (if this were possible, it would imply that the king is occupying multiple positions at once, or that there are multiple kings, which is not allowed)
+    // thus, it is also not possible for a pinned piece to move to block a check
+    // therefore, it follows that a pinned bishop, rook, or queen can't move when the player king is in check
+    if (opponentControlInformation.hasKingInSingleCheck() && pinStatus !== -1) {
+      return []
+    }
+
+    let lineNumberArray
+    switch (piece.getType()) {
+    case 'bishop':
+      if (pinStatus === 0 || pinStatus === 2) lineNumberArray = []
+      else if (pinStatus === 1 || pinStatus === 3) lineNumberArray = [pinStatus]
+      else lineNumberArray = [1, 3]
+      break
+    case 'rook':
+      if (pinStatus === 1 || pinStatus === 3) lineNumberArray = []
+      else if (pinStatus === 0 || pinStatus === 2) lineNumberArray = [pinStatus]
+      else lineNumberArray = [0, 2]
+      break
+    case 'queen':
+      if (pinStatus !== -1) lineNumberArray = [pinStatus]
+      else lineNumberArray = [0, 1, 2, 3]
+      break
+    }
+
+    if (lineNumberArray.length === 0) {
+      return []
+    }
+
+    const lineIncrementList = {
+      0: [1, 0],
+      1: [1, 1],
+      2: [0, 1],
+      3: [1, -1],
+    }
+
+    const possibleMoves = []
+
+    for (const lineNumber of lineNumberArray) {
+      const lineIncrement = lineIncrementList[lineNumber]
+      possibleMoves.push(...this.#findMovesAlongRay(board, startCoords, color, opponentControlInformation, moveRemovesCheck, [lineIncrement[0], lineIncrement[1]]))
+      possibleMoves.push(...this.#findMovesAlongRay(board, startCoords, color, opponentControlInformation, moveRemovesCheck, [-lineIncrement[0], -lineIncrement[1]]))
+    }
+
+    return possibleMoves
+  }
+
   // moveLine 0 is vertical, 1 is from the south west to the north east, 2 is horizontal, and 3 is from south east to north west (direction doesn't matter)
 
   #calcMoveLine(coords1, coords2) {
