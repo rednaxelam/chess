@@ -248,7 +248,7 @@ class PlayerMovementInformation {
       let currentCoords = this.#addDiff(startCoords, increment)
       while (this.#isValidCoords(currentCoords) && board.isEmptySquare(currentCoords)) {
         possibleMoves.push(currentCoords)
-        currentCoords = this.#addDiff(startCoords, increment)
+        currentCoords = this.#addDiff(currentCoords, increment)
       }
 
       if (this.#isValidCoords(currentCoords) && board.getPiece(currentCoords).getColor() !== color) {
@@ -261,7 +261,7 @@ class PlayerMovementInformation {
       while (this.#isValidCoords(currentCoords)
             && board.isEmptySquare(currentCoords)
             && !moveRemovesCheck(currentCoords)) {
-        currentCoords = this.#addDiff(startCoords, increment)
+        currentCoords = this.#addDiff(currentCoords, increment)
       }
 
       if (this.#isValidCoords(currentCoords) && moveRemovesCheck(currentCoords)) {
