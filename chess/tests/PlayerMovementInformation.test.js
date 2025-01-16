@@ -3,6 +3,7 @@ const OpponentControlInformation = require('../OpponentControlInformation')
 const PlayerMovementInformation = require('../PlayerMovementInformation')
 
 function initialisePMI(moveList, color, moveCountList, enPassantableCoordsList) {
+  if (color !== 'black' && color !== 'white') throw new Error('color argument to initialisePMI must be either black or white')
   const opponentColor = color === 'white' ? 'black' : 'white'
 
   const testBoard = new AugmentedBoard('test')
@@ -242,7 +243,7 @@ describe('PlayerMovementInformation Testing', () => {
         playerMovementInformation4.expectMoves([1, 0], [[0, 1], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6]])
       })
 
-      test('Bishop is able to take pieces of the opposite color, but not those of the same color', () => {
+      test('Bishop is able to take pieces of the opposite color, but not those of the same color. Bishop can\'t move over pieces.', () => {
         const playerMovementInformation = initialisePMI([[[0, 5], [4, 3]], [[7, 2], [7, 0]], [[6, 4], [5, 4]], [[1, 4], [3, 4]], [[1, 1], [2, 1]]], 'white')
         playerMovementInformation.expectMoves([4, 3], [[5, 4], [5, 2], [6, 1], [7, 0], [3, 2]])
 
@@ -305,6 +306,89 @@ describe('PlayerMovementInformation Testing', () => {
 
         const playerMovementInformation2 = initialisePMI([[[7, 1], [6, 2]], [[7, 4], [7, 4]], [[1, 3], [5, 3]], [[1, 5], [6, 5]]], 'black')
         playerMovementInformation2.expectMoves([6, 2], [])
+      })
+    })
+  })
+
+  describe('Rook Movement', () => {
+    describe('When not in check', () => {
+      test('Rook is able to move to empty squares horizontally and vertically', () => {
+        const playerMovementInformation = initialisePMI([[[0, 0], [4, 4]], [[6, 2], [6, 2]]], 'white')
+        const movementCoords = [[7, 4], [6, 4], [5, 4], [3, 4], [2, 4], [1, 4], [0, 4],
+          [4, 0], [4, 1], [4, 2], [4, 3], [4, 5], [4, 6], [4, 7]]
+        playerMovementInformation.expectMoves([4, 4], movementCoords)
+
+        const playerMovementInformation2 = initialisePMI([[[7, 7], [6, 6]], [[1, 1], [1, 1]]], 'black')
+        const movementCoords2 = [[7, 6], [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6],
+          [6, 0], [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], [6, 7]]
+        playerMovementInformation2.expectMoves([6, 6], movementCoords2)
+
+        const playerMovementInformation3 = initialisePMI([[[0, 7], [0, 7]], [[6, 2], [6, 2]]], 'white')
+        const movementCoords3 = [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
+          [1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7], [7, 7]]
+        playerMovementInformation3.expectMoves([0, 7], movementCoords3)
+      })
+
+      test('Rook is able to take pieces of the opposite color, but not those of the same color. Rook can\'t move over pieces', () => {
+        const playerMovementInformation = initialisePMI([[[7, 0], [4, 4]], [[6, 4], [6, 4]], [[6, 5], [4, 5]], [[0, 2], [4, 1]], [[1, 4], [3, 4]]], 'black')
+        playerMovementInformation.expectMoves([4, 4], [[5, 4], [4, 3], [4, 2], [4, 1], [3, 4]])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 0], [7, 1]], [[7, 7], [5, 1]], [[0, 1], [7, 7]]], 'white')
+        playerMovementInformation2.expectMoves([7, 1], [[7, 0], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6], [6, 1], [5, 1]])
+
+        const playerMovementInformation3 = initialisePMI([[[7, 7], [7, 7]], [[7, 0], [7, 6]], [[0, 7], [6, 7]]], 'black')
+        playerMovementInformation3.expectMoves([7, 7], [[6, 7]])
+      })
+
+      test('Pinned rook is either unable to move, or can only move along a single moveLine', () => {
+        const playerMovementInformation = initialisePMI([[[0, 4], [0, 7]], [[0, 7], [1, 7]], [[7, 7], [2, 7]]], 'white')
+        playerMovementInformation.expectMoves([1, 7], [[2, 7]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 4], [6, 4]], [[7, 7], [4, 4]], [[1, 5], [4, 5]], [[0, 3], [0, 4]]], 'black')
+        playerMovementInformation2.expectMoves([4, 4], [[5, 4], [3, 4], [2, 4], [1, 4], [0, 4]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 4], [0, 2]], [[0, 0], [1, 3]], [[7, 1], [1, 2]], [[7, 5], [5, 7]]], 'white')
+        playerMovementInformation3.expectMoves([1, 3], [])
+      })
+    })
+
+    describe('When in check', () => {
+      test('Pinned rook in unable to move', () => {
+        const playerMovementInformation = initialisePMI([[[0, 4], [0, 2]], [[0, 0], [1, 3]], [[7, 3], [1, 2]], [[7, 5], [5, 7]]], 'white')
+        playerMovementInformation.expectMoves([1, 3], [])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 4], [5, 3]], [[7, 7], [1, 3]], [[0, 0], [0, 3]], [[0, 3], [1, 7]]], 'black')
+        playerMovementInformation2.expectMoves([1, 3], [])
+      })
+
+      test('Rook is able to take checking pieces in the expected way', () => {
+        const playerMovementInformation = initialisePMI([[[7, 4], [7, 3]], [[7, 7], [5, 7]], [[0, 1], [5, 4]]], 'black')
+        playerMovementInformation.expectMoves([5, 7], [[5, 4]])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 0]], [[0, 0], [0, 1]], [[6, 1], [1, 1]]], 'white')
+        playerMovementInformation2.expectMoves([0, 1], [[1, 1]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 4], [0, 0]], [[0, 0], [0, 1]], [[7, 1], [2, 1]]], 'white')
+        playerMovementInformation3.expectMoves([0, 1], [[2, 1]])
+      })
+
+      test('Rook is able to block checking pieces in the expected way', () => {
+        const playerMovementInformation = initialisePMI([[[7, 4], [7, 3]], [[7, 0], [4, 1]], [[0, 3], [0, 3]]], 'black')
+        playerMovementInformation.expectMoves([4, 1], [[4, 3]])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 1]], [[0, 7], [1, 3]], [[7, 2], [4, 5]]], 'white')
+        playerMovementInformation2.expectMoves([1, 3], [[1, 2], [2, 3]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 4], [0, 2]], [[0, 0], [3, 3]], [[7, 3], [4, 6]]], 'white')
+        playerMovementInformation3.expectMoves([3, 3], [[1, 3], [3, 5]])
+      })
+
+      test('Rook is unable to move if it is unable to remove the check', () => {
+        const playerMovementInformation = initialisePMI([[[7, 4], [7, 4]], [[0, 2], [6, 3]], [[7, 7], [5, 5]]], 'black')
+        playerMovementInformation.expectMoves([5, 5], [])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 4]], [[0, 0], [1, 4]], [[7, 6], [2, 5]]], 'white')
+        playerMovementInformation2.expectMoves([1, 4], [])
       })
     })
   })
