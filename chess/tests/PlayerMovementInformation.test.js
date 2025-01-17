@@ -392,5 +392,50 @@ describe('PlayerMovementInformation Testing', () => {
       })
     })
   })
+
+  /* As desired and as is currently implemented by the code, the queen has the behaviour of the bishop combined with the behaviour
+  of the rook. Because the bishop and rook behave as expected, extensive testing for the queen will not be done. */
+  describe('Queen Movement', () => {
+    test('Queen can move diagonally, vertically, and horizontally along empty squares', () => {
+      const playerMovementInformation = initialisePMI([[[7, 3], [2, 5]], [[1, 1], [6, 3]]], 'black')
+      const movementCoords = [[1, 4], [0, 3], [1, 5], [0, 5], [1, 6], [0, 7], [2, 6], [2, 7],
+        [3, 6], [4, 7], [3, 5], [4, 5], [5, 5], [6, 5], [7, 5], [3, 4], [4, 3], [5, 2], [6, 1], [7, 0],
+        [2, 4], [2, 3], [2, 2], [2, 1], [2, 0]]
+      playerMovementInformation.expectMoves([2, 5], movementCoords)
+    })
+
+    describe('When not in check', () => {
+      test('Queen doesn\'t behave in an unexpected way', () => {
+        const moveList = [[[0, 3], [4, 3]], [[6, 2], [3, 2]], [[7, 3], [6, 3]], [[7, 6], [7, 6]], [[0, 2], [5, 2]], [[1, 5], [4, 5]], [[0, 7], [1, 6]]]
+        const playerMovementInformation = initialisePMI(moveList, 'white')
+        playerMovementInformation.expectMoves([4, 3], [[5, 3], [6, 3], [5, 4], [6, 5], [7, 6], [4, 4], [3, 4], [2, 5],
+          [3, 3], [2, 3], [1, 3], [0, 3], [3, 2], [4, 2], [4, 1], [4, 0]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 4], [7, 0]], [[7, 3], [6, 0]], [[0, 0], [3, 0]], [[1, 1], [5, 1]]], 'black')
+        playerMovementInformation2.expectMoves([6, 0], [[5, 0], [4, 0], [3, 0]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 4], [3, 2]], [[0, 3], [5, 4]], [[7, 2], [6, 5]]], 'white')
+        playerMovementInformation3.expectMoves([5, 4], [[4, 3], [6, 5]])
+
+
+      })
+    })
+
+    describe('When is check', () => {
+      test('Queen doesn\'t behave in an unexpected way', () => {
+        const playerMovementInformation = initialisePMI([[[0, 4], [0, 0]], [[0, 3], [3, 5]], [[7, 5], [5, 5]]], 'white')
+        playerMovementInformation.expectMoves([3, 5], [[5, 5], [4, 4], [3, 3]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 4], [7, 4]], [[7, 3], [7, 2]], [[0, 1], [5, 3]]], 'black')
+        playerMovementInformation2.expectMoves([7, 2], [])
+
+        const playerMovementInformation3 = initialisePMI([[[7, 4], [7, 4]], [[7, 3], [7, 3]], [[1, 3], [6, 3]]], 'black')
+        playerMovementInformation3.expectMoves([7, 3], [[6, 3]])
+
+        const playerMovementInformation4 = initialisePMI([[[7, 4], [7, 4]], [[7, 3], [4, 1]], [[0, 2], [3, 0]], [[0, 0], [4, 4]]], 'black')
+        playerMovementInformation4.expectMoves([4, 1], [])
+      })
+    })
+  })
 })
 
