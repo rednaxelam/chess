@@ -77,6 +77,10 @@ class PlayerMovementInformation {
         moveArray = this.#findMovesAlongMoveLines(board, startCoords, color, opponentControlInformation, moveRemovesCheck)
         this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
         break
+      case 'queen':
+        moveArray = this.#findMovesAlongMoveLines(board, startCoords, color, opponentControlInformation, moveRemovesCheck)
+        this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
+        break
       }
 
       if (!pieceList.hasNextPieceElement()) continueFlag = false
