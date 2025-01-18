@@ -26,7 +26,7 @@ class PlayerMovementInformation {
 
     const pieceList = color === 'white' ? board.getWhitePieceListIterable() : board.getBlackPieceListIterable()
 
-    // if the king is in a single check, then moving a piece to a square which is true on the checkRemovalBoard will remove the single check
+    // if the king is in a single check, then moving a (non-king) piece to a square which is true on the checkRemovalBoard will remove the single check
     let checkRemovalBoard = null
 
     if (opponentControlInformation.hasKingInSingleCheck()) {
@@ -79,6 +79,10 @@ class PlayerMovementInformation {
         break
       case 'queen':
         moveArray = this.#findMovesAlongMoveLines(board, startCoords, color, opponentControlInformation, moveRemovesCheck)
+        this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
+        break
+      case 'king':
+        moveArray = this.#findKingMoves(board, startCoords, color, opponentControlInformation)
         this.#MoveBoard[startCoords[0]][startCoords[1]] = moveArray
         break
       }
@@ -343,6 +347,53 @@ class PlayerMovementInformation {
       const lineIncrement = lineIncrementList[lineNumber]
       possibleMoves.push(...this.#findMovesAlongRay(board, startCoords, color, opponentControlInformation, moveRemovesCheck, [lineIncrement[0], lineIncrement[1]]))
       possibleMoves.push(...this.#findMovesAlongRay(board, startCoords, color, opponentControlInformation, moveRemovesCheck, [-lineIncrement[0], -lineIncrement[1]]))
+    }
+
+    return possibleMoves
+  }
+
+  #findKingMoves(board, startCoords, color, opponentControlInformation) {
+    this.#validatePieceType(board, startCoords, 'king')
+
+    const king = board.getPiece(startCoords)
+
+    const possibleMoves = []
+
+    const possibleIncrements = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+
+    for (const increment of possibleIncrements) {
+      const currentCoords = this.#addDiff(startCoords, increment)
+      if (this.#isValidCoords(currentCoords)
+          && (board.isEmptySquare(currentCoords) || board.getPiece(currentCoords).getColor() !== color)
+          && !opponentControlInformation.squareIsControlled(currentCoords)) {
+        possibleMoves.push(currentCoords)
+      }
+    }
+
+    // castling
+
+    // coordinates for this function must be one of the rook starting positions for the purposes of the following code
+    const rookHasNotMoved = (coords) => {
+      return (!board.isEmptySquare(coords)
+          && board.getPiece(coords).getMoveCount() === 0)
+    }
+
+    const c0 = color === 'white' ? 0 : 7
+
+    if (king.getMoveCount() === 0
+        && (!opponentControlInformation.hasKingInSingleCheck() && !opponentControlInformation.hasKingInDoubleCheck())) {
+      // queenside castling
+      if (rookHasNotMoved([c0, 0])
+          && board.isEmptySquare([c0, 3]) && board.isEmptySquare([c0, 2]) && board.isEmptySquare([c0, 1])
+          && !opponentControlInformation.squareIsControlled([c0, 3]) && !opponentControlInformation.squareIsControlled([c0, 2])) {
+        possibleMoves.push([c0, 2])
+      }
+      // kingside castling
+      if (rookHasNotMoved([c0, 7])
+          && board.isEmptySquare([c0, 5]) && board.isEmptySquare([c0, 6])
+          && !opponentControlInformation.squareIsControlled([c0, 5]) && !opponentControlInformation.squareIsControlled([c0, 6])) {
+        possibleMoves.push([c0, 6])
+      }
     }
 
     return possibleMoves
