@@ -197,7 +197,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard4.initialiseBoard([[[6, 0], [7, 6]], [[0, 0], [7, 7]], [[1, 0], [5, 7]], [[6, 1], [4, 7]], [[7, 4], [2, 7]], [[0, 7], [0, 7]], [[6, 2], [0, 6]]])
       const opponentControlInformation4 = new OpponentControlInformation(testBoard4, 'white', 'test')
       opponentControlInformation4.expectState(
-        [[6, 7], [5, 7], [6, 6], [1, 7]],
+        [[6, 7], [5, 7], [6, 6], [1, 7], [3, 7]],
         createInstanceVariablesComparisonObject(true, 15, [0, 7], [2, 7], false),
         []
       )
@@ -208,7 +208,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard.initialiseBoard([[[1, 0], [6, 0]], [[7, 0], [7, 0]], [[0, 4], [7, 4]]])
       const opponentControlInformation = new OpponentControlInformation(testBoard, 'black', 'test')
       opponentControlInformation.expectState(
-        [[7, 1], [7, 2], [7, 3]],
+        [[7, 1], [7, 2], [7, 3], [7, 5]],
         createInstanceVariablesComparisonObject(true, 24, [7, 0], [7, 4], false),
         []
       )
@@ -217,7 +217,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard2.initialiseBoard([[[6, 0], [1, 0]], [[0, 0], [0, 0]], [[7, 4], [0, 1]]])
       const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'white', 'test')
       opponentControlInformation2.expectState(
-        [],
+        [[0, 2]],
         createInstanceVariablesComparisonObject(true, 8, [0, 0], [0, 1], false),
         []
       )
@@ -226,7 +226,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard3.initialiseBoard([[[1, 0], [6, 0]], [[7, 0], [7, 0]], [[0, 4], [7, 1]], [[7, 7], [7, 7]], [[1, 1], [6, 7]]])
       const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'black', 'test')
       opponentControlInformation3.expectState(
-        [[7, 6], [7, 5], [7, 4], [7, 3], [7, 2]],
+        [[7, 6], [7, 5], [7, 4], [7, 3], [7, 2], [7, 0]],
         'double',
         []
       )
@@ -320,7 +320,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard2.initialiseBoard([[[0, 5], [0, 7]], [[7, 4], [1, 6]], [[6, 0], [7, 0]]])
       const opponentControlInformation2 = new OpponentControlInformation(testBoard2, 'white', 'test')
       opponentControlInformation2.expectState(
-        [],
+        [[2, 5]],
         createInstanceVariablesComparisonObject(true, 13, [0, 7], [1, 6], false),
         []
       )
@@ -329,7 +329,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard3.initialiseBoard([[[0, 2], [0, 0]], [[7, 4], [1, 1]], [[0, 5], [7, 7]]])
       const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'white', 'test')
       opponentControlInformation3.expectState(
-        [[2, 2], [3, 3], [4, 4], [5, 5], [6, 6]],
+        [[0, 0], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6]],
         'double',
         []
       )
@@ -378,7 +378,7 @@ describe('OpponentControlInformation Testing', () => {
       testBoard3.initialiseBoard([[[7, 3], [7, 0]], [[1, 0], [7, 1]], [[1, 1], [6, 1]], [[0, 4], [5, 0]], [[6, 0], [4, 0]], [[1, 2], [3, 0]]])
       const opponentControlInformation3 = new OpponentControlInformation(testBoard3, 'black', 'test')
       opponentControlInformation3.expectState(
-        [[6, 0], [3, 1]],
+        [[6, 0], [4, 0], [3, 1]],
         createInstanceVariablesComparisonObject(true, 27, [7, 0], [5, 0], false),
         []
       )
