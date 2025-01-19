@@ -193,6 +193,14 @@ class OpponentControlInformation {
               this.#checkingPiece = null
               this.#checkingPieceCoordinates = null
               this.#kingCoordinates = null
+
+              // the king must move off of the moveLine if it wants to get out of check
+              currentCoords = this.#addDiff(currentCoords, increment)
+              if (this.#isValidCoords(currentCoords)
+                  && (this.#board.isEmptySquare(currentCoords) || this.#board.getPiece(currentCoords).getColor() === this.#color)) {
+                this.#setSquareAsControlled(currentCoords)
+              }
+
               continueFlag = false
             } else if (this.#hasKingInDoubleCheck) {
               throw new Error('Not possible for there to be a triple check')
@@ -201,6 +209,14 @@ class OpponentControlInformation {
               this.#checkingPiece = piece
               this.#checkingPieceCoordinates = [pieceCoords[0], pieceCoords[1]]
               this.#kingCoordinates = [currentCoords[0], currentCoords[1]]
+
+              // the king must move off of the moveLine if it wants to get out of check
+              currentCoords = this.#addDiff(currentCoords, increment)
+              if (this.#isValidCoords(currentCoords)
+                  && (this.#board.isEmptySquare(currentCoords) || this.#board.getPiece(currentCoords).getColor() === this.#color)) {
+                this.#setSquareAsControlled(currentCoords)
+              }
+
               continueFlag = false
             }
           }
