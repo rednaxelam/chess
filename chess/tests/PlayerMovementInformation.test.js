@@ -437,5 +437,139 @@ describe('PlayerMovementInformation Testing', () => {
       })
     })
   })
+
+  describe('King Movement', () => {
+    test('King can move to squares immediately adjacent to it', () => {
+      const playerMovementInformation = initialisePMI([[[7, 4], [5, 3]], [[1, 1], [1, 1]]], 'black')
+      playerMovementInformation.expectMoves([5, 3], [[6, 2], [6, 3], [6, 4], [5, 4], [4, 4], [4, 3], [4, 2], [5, 2]])
+
+      const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 4]], [[6, 7], [6, 7]]], 'white')
+      playerMovementInformation2.expectMoves([0, 4], [[0, 3], [1, 3], [1, 4], [1, 5], [0, 5]])
+
+      const playerMovementInformation3 = initialisePMI([[[7, 4], [7, 0]], [[1, 1], [1, 1]]], 'black', [[[7, 0], 4]])
+      playerMovementInformation3.expectMoves([7, 0], [[6, 0], [6, 1], [7, 1]])
+    })
+
+    test('King is unable to move to empty squares that the opponent controls', () => {
+      const playerMovementInformation = initialisePMI([[[0, 4], [0, 4]], [[7, 0], [7, 3]], [[6, 5], [2, 5]]], 'white')
+      playerMovementInformation.expectMoves([0, 4], [[1, 5], [0, 5]])
+
+      const playerMovementInformation2 = initialisePMI([[[7, 4], [5, 4]], [[0, 3], [6, 6]], [[0, 2], [3, 6]], [[0, 1], [2, 4]]], 'black')
+      playerMovementInformation2.expectMoves([5, 4], [[5, 3]])
+
+      const playerMovementInformation3 = initialisePMI([[[0, 4], [0, 7]], [[7, 0], [7, 6]], [[6, 6], [3, 6]]], 'white', [[[0, 7], 3]])
+      playerMovementInformation3.expectMoves([0, 7], [[0, 6], [1, 6], [1, 7]])
+    })
+
+    test('King is able to take undefended opponent pieces', () => {
+      const playerMovementInformation = initialisePMI([[[0, 4], [0, 3]], [[7, 6], [1, 2]], [[7, 5], [1, 3]], [[6, 4], [1, 4]]], 'white')
+      playerMovementInformation.expectMoves([0, 3], [[1, 2], [1, 3], [1, 4]])
+
+      const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 7]], [[7, 0], [0, 6]]], 'white', [[[0, 7], 3]])
+      playerMovementInformation2.expectMoves([0, 7], [[0, 6], [1, 7]])
+
+      const playerMovementInformation3 = initialisePMI([[[7, 4], [6, 1]], [[0, 1], [5, 1]], [[0, 6], [6, 2]], [[1, 2], [5, 2]]], 'black')
+      playerMovementInformation3.expectMoves([6, 1], [[7, 1], [6, 2], [5, 2], [5, 1], [6, 0]])
+    })
+
+    test('King is unable to take defended opponent pieces', () => {
+      const playerMovementInformation = initialisePMI([[[0, 4], [4, 5]], [[6, 4], [5, 4]], [[7, 2], [6, 5]]], 'white')
+      playerMovementInformation.expectMoves([4, 5], [[5, 5], [4, 6], [3, 6], [3, 5], [3, 4], [4, 4]])
+
+      const playerMovementInformation2 = initialisePMI([[[7, 4], [7, 1]], [[1, 1], [6, 1]], [[0, 3], [0, 1]], [[0, 1], [6, 2]], [[0, 2], [2, 6]]], 'black')
+      playerMovementInformation2.expectMoves([7, 1], [[6, 0]])
+    })
+
+    test('King is unable to move to squares occupied by pieces of the same color', () => {
+      const playerMovementInformation = initialisePMI([[[7, 4], [5, 3]], [[6, 2], [6, 2]], [[6, 4], [6, 4]], [[7, 2], [5, 4]], [[1, 3], [4, 3]]], 'black')
+      playerMovementInformation.expectMoves([5, 3], [[6, 3], [4, 4], [4, 3], [4, 2]])
+
+      const playerMovementInformation2 = initialisePMI([[[0, 4], [0, 1]], [[1, 0], [1, 0]], [[1, 1], [1, 1]], [[1, 2], [1, 2]], [[7, 7], [0, 7]]], 'white')
+      playerMovementInformation2.expectMoves([0, 1], [])
+
+      const playerMovementInformation3 = initialisePMI([[[0, 4], [0, 0]], [[1, 0], [1, 0]], [[1, 1], [1, 1]], [[1, 2], [1, 2]], [[7, 7], [0, 7]]], 'white')
+      playerMovementInformation3.expectMoves([0, 0], [])
+
+      const playerMovementInformation4 = initialisePMI([[[0, 4], [0, 2]], [[1, 0], [1, 0]], [[1, 1], [1, 1]], [[1, 2], [1, 2]], [[7, 7], [0, 7]]], 'white')
+      playerMovementInformation4.expectMoves([0, 2], [[1, 3]])
+
+      const playerMovementInformation5 = initialisePMI([[[0, 4], [4, 3]], [[1, 2], [5, 2]], [[6, 3], [5, 3]], [[1, 4], [5, 4]], [[7, 5], [7, 5]]], 'white')
+      playerMovementInformation5.expectMoves([4, 3], [[3, 2], [3, 3], [3, 4]])
+    })
+
+    test('When in check, king is unable to move along the line of attack', () => {
+      const playerMovementInformation = initialisePMI([[[0, 4], [2, 4]], [[6, 3], [1, 3]], [[7, 2], [3, 5]]], 'white')
+      playerMovementInformation.expectMoves([2, 4], [[3, 3], [3, 4], [3, 5], [2, 5], [1, 5], [1, 4], [2, 3]])
+
+      const playerMovementInformation2 = initialisePMI([[[7, 4], [7, 4]], [[0, 3], [7, 5]], [[1, 6], [6, 6]]], 'black')
+      playerMovementInformation2.expectMoves([7, 4], [[6, 3]])
+
+      const playerMovementInformation3 = initialisePMI([[[7, 4], [6, 6]], [[0, 3], [7, 7]], [[0, 2], [5, 5]]], 'black')
+      playerMovementInformation3.expectMoves([6, 6], [[6, 5], [5, 6]])
+
+      const playerMovementInformation4 = initialisePMI([[[0, 4], [2, 4]], [[1, 3], [3, 3]], [[6, 4], [3, 4]], [[7, 5], [4, 6]]], 'white')
+      playerMovementInformation4.expectMoves([2, 4], [[3, 4], [1, 4], [1, 5]])
+
+      const playerMovementInformation5= initialisePMI([[[0, 4], [2, 4]], [[1, 3], [3, 3]], [[6, 4], [3, 4]], [[7, 5], [0, 6]], [[7, 3], [4, 5]]], 'white')
+      playerMovementInformation5.expectMoves([2, 4], [[1, 4], [1, 3]])
+    })
+
+    describe('Castling', () => {
+      test('Castling is possible when the king and the rook have not moved, the squares between them are unoccupied, and the path the king takes is not under attack', () => {
+        const playerMovementInformation = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[6, 0], [6, 0]]], 'white')
+        playerMovementInformation.expectMoves([0, 4], [[0, 2], [0, 3], [0, 5], [0, 6], [1, 3], [1, 4], [1, 5]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 0], [7, 0]], [[7, 4], [7, 4]], [[7, 7], [7, 7]], [[6, 4], [6, 4]], [[0, 3], [4, 4]]], 'black')
+        playerMovementInformation2.expectMoves([7, 4], [[7, 2], [7, 3], [7, 5], [7, 6], [6, 3], [6, 5]])
+      })
+
+      test('Castling in a particular direction is not possible when either the king or the rook has moved', () => {
+        const playerMovementInformation = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[6, 0], [6, 0]]], 'white', [[[0, 0], 2], [[0, 7], 2]])
+        playerMovementInformation.expectMoves([0, 4], [[0, 3], [0, 5], [1, 3], [1, 4], [1, 5]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 0], [7, 0]], [[7, 4], [7, 4]], [[7, 7], [7, 7]], [[1, 0], [1, 0]]], 'black', [[[7, 4], 2]])
+        playerMovementInformation2.expectMoves([7, 4], [[7, 3], [7, 5], [6, 3], [6, 4], [6, 5]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[6, 0], [6, 0]]], 'white', [[[0, 7], 2]])
+        playerMovementInformation3.expectMoves([0, 4], [[0, 2], [0, 3], [0, 5], [1, 3], [1, 4], [1, 5]])
+      })
+
+      test('Castling is not possible any of the squares between the rook and king are occupied', () => {
+        const playerMovementInformation = initialisePMI([[[7, 0], [7, 0]], [[7, 2], [7, 2]], [[7, 4], [7, 4]], [[7, 6], [7, 6]], [[7, 7], [7, 7]], [[1, 0], [1, 0]]], 'black')
+        playerMovementInformation.expectMoves([7, 4], [[7, 3], [7, 5], [6, 3], [6, 4], [6, 5]])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 0], [0, 0]], [[0, 1], [0, 1]], [[0, 4], [0, 4]], [[0, 5], [0, 5]], [[0, 7], [0, 7]], [[1, 3], [1, 3]], [[1, 4], [1, 4]], [[1, 5], [1, 5]], [[6, 0], [6, 0]]], 'white')
+        playerMovementInformation2.expectMoves([0, 4], [[0, 3]])
+
+        const playerMovementInformation3 = initialisePMI([[[7, 0], [7, 0]], [[7, 3], [7, 3]], [[7, 4], [7, 4]], [[7, 7], [7, 7]], [[0, 2], [7, 6]]], 'black')
+        playerMovementInformation3.expectMoves([7, 4], [[6, 3], [6, 4], [7, 5]])
+      })
+
+      test('Castling is not possible when the path the king would take is under attack', () => {
+        const playerMovementInformation = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[7, 5], [2, 4]]], 'white')
+        playerMovementInformation.expectMoves([0, 4], [[0, 3], [0, 5], [1, 4]])
+
+        const playerMovementInformation2 = initialisePMI([[[7, 0], [7, 0]], [[7, 4], [7, 4]], [[7, 7], [7, 7]], [[0, 0], [0, 3]], [[0, 3], [5, 7]]], 'black')
+        playerMovementInformation2.expectMoves([7, 4], [[6, 4], [6, 5]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[6, 3], [1, 3]]], 'white')
+        playerMovementInformation3.expectMoves([0, 4], [[0, 3], [1, 3], [1, 4], [1, 5], [0, 5]])
+
+        const playerMovementInformation4 = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[0, 7], [0, 7]], [[7, 3], [2, 4]]], 'white')
+        playerMovementInformation4.expectMoves([0, 4], [[0, 3], [0, 5]])
+      })
+
+      test('Additional castling tests where 2 or more of the castling conditions are false', () => {
+        const playerMovementInformation = initialisePMI([[[7, 0], [7, 0]], [[0, 1], [7, 2]], [[7, 4], [7, 4]], [[7, 7], [7, 7]], [[0, 6], [5, 5]]], 'black')
+        playerMovementInformation.expectMoves([7, 4], [[7, 3], [7, 5], [6, 5]])
+
+        const playerMovementInformation2 = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[7, 2], [0, 5]], [[7, 3], [1, 6]], [[0, 7], [0, 7]]], 'white')
+        playerMovementInformation2.expectMoves([0, 4], [[0, 3], [0, 2]])
+
+        const playerMovementInformation3 = initialisePMI([[[0, 0], [0, 0]], [[0, 4], [0, 4]], [[7, 2], [0, 5]], [[7, 3], [1, 6]], [[0, 7], [0, 7]]], 'white', [[[0, 0], 2]])
+        playerMovementInformation3.expectMoves([0, 4], [[0, 3]])
+      })
+    })
+  })
 })
 
