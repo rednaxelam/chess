@@ -124,7 +124,7 @@ class OpponentControlInformation {
 
   #markSquare(piece, pieceCoords, coords) {
     // if the coords argument does not represent valid board coordinates, then do nothing
-    if (!((coords[0] >= 0 && coords[0] <= 7) && (coords[1] >= 0 && coords[1] <= 7))) return
+    if (!this.#isValidCoords(coords)) return
 
     if (this.#board.isEmptySquare(coords)) {
       this.#setSquareAsControlled(coords)
@@ -157,13 +157,11 @@ class OpponentControlInformation {
   }
 
   #markControlRay(piece, pieceCoords, increment) {
-    let currentCoords = [pieceCoords[0] + increment[0], pieceCoords[1] + increment[1]]
+    let currentCoords = this.#addDiff(pieceCoords, increment)
     let hasEncounteredAnOpponentPiece = false
     let continueFlag = true
     let firstEncounteredOpponentPiece
-    while ((currentCoords[0] >= 0 && currentCoords[0] <= 7)
-          && (currentCoords[1] >= 0 && currentCoords[1] <= 7)
-          && continueFlag) {
+    while (this.#isValidCoords(currentCoords) && continueFlag) {
       if (this.#board.isEmptySquare(currentCoords)) {
         if (!hasEncounteredAnOpponentPiece) {
           this.#setSquareAsControlled(currentCoords)
@@ -208,7 +206,7 @@ class OpponentControlInformation {
           }
         }
       }
-      currentCoords = [currentCoords[0] + increment[0], currentCoords[1] + increment[1]]
+      currentCoords = this.#addDiff(currentCoords, increment)
     }
   }
 
@@ -238,6 +236,10 @@ class OpponentControlInformation {
 
   #addDiff(coords, diff) {
     return [coords[0] + diff[0], coords[1] + diff[1]]
+  }
+
+  #isValidCoords(coords) {
+    return coords[0] >= 0 && coords[0] <= 7 && coords[1] >= 0 && coords[1] <= 7
   }
 
   #setSquareAsControlled(coords) {
