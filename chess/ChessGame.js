@@ -130,22 +130,32 @@ class ChessGame {
   }
 
   whiteResigns() {
+    if (!this.isActiveGame()) return
+
     this.#gameStatus = 7
   }
 
   blackResigns() {
+    if (!this.isActiveGame()) return
+
     this.#gameStatus = 6
   }
 
   whiteTimeout() {
+    if (!this.isActiveGame()) return
+
     this.#gameStatus = 9
   }
 
   blackTimeout() {
+    if (!this.isActiveGame()) return
+
     this.#gameStatus = 8
   }
 
   drawViaAgreement() {
+    if (!this.isActiveGame()) return
+
     this.#gameStatus = 10
   }
 
