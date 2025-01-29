@@ -236,6 +236,132 @@ class ChessGame {
     return [coords[0] + diff[0], coords[1] + diff[1]]
   }
 
+  // methods for testing only
+
+  expectGameStatus(expectedGameStatus) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    if (this.#gameStatus !== expectedGameStatus) {
+      throw new Error('Expected gameStatus does not match actual gameStatus')
+    }
+  }
+
+  expectPieceIdsAtCoords(coordsIdArray) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    for (const coordsId of coordsIdArray) {
+      const coords = coordsId[0]
+      const expectedId = coordsId[1]
+
+      if (this.#board.isEmptySquare(coords)) {
+        throw new Error(`Piece with id ${expectedId} does not occupy the empty square at [${coords[0]}, ${coords[1]}]`)
+      } else if (this.#board.getPiece(coords).getId() !== expectedId) {
+        throw new Error(`Piece with id ${expectedId} expected to occupy square at [${coords[0]}, ${coords[1]}], 
+          actual occupying piece id is ${this.#board.getPiece(coords).getId()}`)
+      }
+    }
+  }
+
+  expectTypesAtCoords(coordsTypeArray) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    for (const coordsType of coordsTypeArray) {
+      const coords = coordsType[0]
+      const expectedType = coordsType[1]
+
+      if (this.#board.isEmptySquare(coords)) {
+        throw new Error(`Piece with type ${expectedType} does not occupy the empty square at [${coords[0]}, ${coords[1]}]`)
+      } else if (this.#board.getPiece(coords).getType() !== expectedType) {
+        throw new Error(`Piece with type ${expectedType} expected to occupy square at [${coords[0]}, ${coords[1]}], 
+          actual type of occupying piece is ${this.#board.getPiece(coords).getType()}`)
+      }
+    }
+  }
+
+  expectEmptySquares(coordsArray) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    for (const coords of coordsArray) {
+      if (!this.#board.isEmptySquare(coords)) {
+        throw new Error(`Occupied square at [${coords[0]}, ${coords[1]}] was expected to be empty, but is actually occupied`)
+      }
+    }
+  }
+
+  expectGameStatusesAfterMoves(moveGameStatusArray) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    for (const moveGameStatus of moveGameStatusArray) {
+      const move = moveGameStatus[0]
+      const expectedGameStatus = moveGameStatus[1]
+
+      this.playMove(move[0], move[1])
+
+      if (this.getGameStatus() !== expectedGameStatus) {
+        throw new Error(`Expected game status ${expectedGameStatus} does not match actual game status ${this.getGameStatus()}. 
+          This occurred after the move from [${move[0][0]}, ${move[0][1]}] to [${move[1][0]}, ${move[1][1]}]`)
+      }
+    }
+  }
+
+  expectPieceRemoved(id) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    const pieceList = id <= 15 ? this.#board.getWhitePieceListIterable() : this.#board.getBlackPieceListIterable()
+
+    let continueFlag = true
+
+    while (continueFlag) {
+      const pieceElement = pieceList.popCurrentPieceElement()
+      const piece = pieceElement.piece
+
+      if (piece.getId() === id) {
+        throw new Error(`Piece with id ${id} was expected to have been removed, but is actually still on the board`)
+      }
+
+      continueFlag = pieceList.hasNextPieceElement()
+    }
+  }
+
+  // this method assumes that initialisation of the board happens immediately after creation of the ChessGame instance, and that
+  // the player has valid moves after initialisation of the board
+  initialiseBoard(moveList, color, moveCountList) {
+    if (!this.#test) {
+      throw new Error('This method is only available in testing mode.')
+    }
+
+    if (color !== 'black' && color !== 'white') throw new Error('color argument to initialiseBoard must be either black or white')
+    this.#color = color
+    this.#gameStatus = color === 'white' ? 0 : 1
+    const opponentColor = color === 'white' ? 'black' : 'white'
+
+    this.#board.initialiseBoard(moveList)
+
+    if (moveCountList) {
+      for (const moveCountElement of moveCountList) {
+        const piece = this.#board.getPiece(moveCountElement[0])
+        const moveCount = moveCountElement[1]
+        for (let i = 0; i < moveCount; i++) {
+          piece.incrementMoveCount()
+        }
+      }
+    }
+
+    const opponentControlInformation = new OpponentControlInformation(this.#board, opponentColor)
+    this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
+  }
 }
 
 module.exports = ChessGame
