@@ -158,4 +158,84 @@ describe('ChessGame Testing', () => {
       ])
     })
   })
+
+  describe('End of game detection', () => {
+    test('Checkmate detection', () => {
+      const chessGame = new ChessGame('test')
+      const moveList = [[[7, 4], [7, 4]], [[7, 7], [4, 7]], [[7, 3], [3, 7]], [[1, 5], [1, 5]], [[1, 6], [1, 6]],
+        [[0, 4], [0, 4]], [[0, 7], [0, 7]]]
+      chessGame.initialiseBoard(moveList, 'white', [[[0, 4], 0], [[0, 7], 0]])
+      chessGame.expectGameStatusesAfterMoves([[[[0, 4], [0, 6]], 1],
+        [[[3, 7], [0, 7]], 5]
+      ])
+
+      const chessGame2 = new ChessGame('test')
+      const moveList2 = [[[0, 0], [5, 1]], [[0, 4], [2, 5]], [[1, 6], [2, 6]], [[1, 7], [2, 7]],
+        [[7, 4], [4, 6]], [[6, 5], [4, 5]], [[6, 7], [4, 7]]]
+      chessGame2.initialiseBoard(moveList2, 'white', [[[2, 6], 1], [[2, 7], 1], [[4, 7], 2], [[4, 5], 1]])
+      chessGame2.playMove([2, 7], [3, 7])
+      chessGame2.expectGameStatus(4)
+
+      const chessGame3 = new ChessGame('test')
+      const moveList3 = [[[7, 1], [7, 1]], [[7, 2], [7, 2]], [[7, 4], [6, 2]], [[6, 1], [6, 1]], [[6, 2], [5, 2]],
+        [[0, 0], [0, 3]], [[0, 2], [4, 6]], [[0, 4], [0, 4]]]
+      chessGame3.initialiseBoard(moveList3, 'white')
+      chessGame3.playMove([4, 6], [7, 3])
+      chessGame3.expectGameStatus(4)
+
+      const chessGame4 = new ChessGame('test')
+      const moveList4 = [[[7, 4], [7, 4]], [[7, 1], [3, 3]],
+        [[1, 0], [1, 0]], [[1, 1], [1, 1]], [[0, 4], [0, 0]], [[0, 0], [0, 1]]]
+      chessGame4.initialiseBoard(moveList4, 'black', [[[0, 0], 3], [[0, 1], 2]])
+      chessGame4.playMove([3, 3], [1, 2])
+      chessGame4.expectGameStatus(5)
+    })
+
+    test('Stalemate detection', () => {
+      const chessGame = new ChessGame('test')
+      chessGame.initialiseBoard([[[6, 6], [6, 6]], [[6, 5], [5, 5]], [[7, 4], [3, 4]],
+        [[1, 5], [4, 5]], [[1, 7], [3, 7]], [[0, 4], [4, 7]]], 'black', [[[4, 5], 2], [[3, 7], 1], [[5, 5], 1]])
+      chessGame.playMove([3, 4], [4, 5])
+      chessGame.expectGameStatus(11)
+
+      const chessGame2 = new ChessGame('test')
+      const moveList2 = [[[0, 4], [6, 5]], [[0, 2], [2, 2]], [[1, 0], [2, 0]], [[6, 0], [3, 0]], [[7, 4], [6, 7]]]
+      chessGame2.initialiseBoard(moveList2, 'white', [[[2, 0], 1], [[3, 0], 2]])
+      chessGame2.playMove([2, 2], [6, 6])
+      chessGame2.expectGameStatus(11)
+
+      const chessGame3 = new ChessGame('test')
+      chessGame3.initialiseBoard([[[7, 4], [7, 5]], [[0, 4], [4, 5]], [[1, 5], [6, 5]]], 'white', [[[6, 5], 4]])
+      chessGame3.playMove([4, 5], [5, 5])
+      chessGame3.expectGameStatus(11)
+
+      const chessGame4 = new ChessGame('test')
+      const moveList4 = [[[0, 4], [1, 3]], [[6, 4], [1, 4]], [[6, 6], [1, 6]], [[6, 7], [1, 7]], [[7, 4], [0, 7]],
+        [[7, 7], [0, 6]], [[7, 2], [0, 5]]]
+      const moveCountList4 = [[[1, 4], 4], [[1, 6], 4], [[1, 7], 4], [[0, 7], 12], [[0, 6], 6], [[1, 3], 3]]
+      chessGame4.initialiseBoard(moveList4, 'white', moveCountList4)
+      chessGame4.playMove([1, 3], [0, 4])
+      chessGame4.expectGameStatus(11)
+    })
+  })
+
+  test('Not possible to play moves or change the game status for a finished game', () => {
+    const chessGame = new ChessGame('test')
+    chessGame.playMove([1, 7], [3, 7])
+    chessGame.expectGameStatus(1)
+    chessGame.whiteResigns()
+    chessGame.expectGameStatus(7)
+    chessGame.playMove([6, 7], [4, 7])
+    chessGame.expectGameStatus(7)
+    chessGame.whiteResigns()
+    chessGame.expectGameStatus(7)
+    chessGame.whiteTimeout()
+    chessGame.expectGameStatus(7)
+    chessGame.blackResigns()
+    chessGame.expectGameStatus(7)
+    chessGame.blackTimeout()
+    chessGame.expectGameStatus(7)
+    chessGame.drawViaAgreement()
+    chessGame.expectGameStatus(7)
+  })
 })
