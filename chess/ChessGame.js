@@ -314,25 +314,29 @@ class ChessGame {
     }
   }
 
-  expectPieceRemoved(id) {
+  expectPiecesRemoved(idArray) {
     if (!this.#test) {
       throw new Error('This method is only available in testing mode.')
     }
 
-    const pieceList = id <= 15 ? this.#board.getWhitePieceListIterable() : this.#board.getBlackPieceListIterable()
+    for (const id of idArray) {
+      const pieceList = id <= 15 ? this.#board.getWhitePieceListIterable() : this.#board.getBlackPieceListIterable()
 
-    let continueFlag = true
+      let continueFlag = true
 
-    while (continueFlag) {
-      const pieceElement = pieceList.popCurrentPieceElement()
-      const piece = pieceElement.piece
+      while (continueFlag) {
+        const pieceElement = pieceList.popCurrentPieceElement()
+        const piece = pieceElement.piece
 
-      if (piece.getId() === id) {
-        throw new Error(`Piece with id ${id} was expected to have been removed, but is actually still on the board`)
+        if (piece.getId() === id) {
+          throw new Error(`Piece with id ${id} was expected to have been removed, but is actually still on the board`)
+        }
+
+        continueFlag = pieceList.hasNextPieceElement()
       }
-
-      continueFlag = pieceList.hasNextPieceElement()
     }
+
+
   }
 
   // this method assumes that initialisation of the board happens immediately after creation of the ChessGame instance, and that
