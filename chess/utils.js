@@ -16,7 +16,22 @@ function validateTestParameter(test) {
   }
 }
 
+function isCoordsEqual(coords1, coords2) {
+  return coords1[0] === coords2[0] && coords1[1] === coords2[1]
+}
+
+function isValidCoords(coords) {
+  return coords[0] >= 0 && coords[0] <= 7 && coords[1] >= 0 && coords[1] <= 7
+}
+
+function addDiff(coords, diff) {
+  return [coords[0] + diff[0], coords[1] + diff[1]]
+}
+
 module.exports = {
   validateCoordinates,
   validateTestParameter,
+  isCoordsEqual,
+  isValidCoords,
+  addDiff,
 }
