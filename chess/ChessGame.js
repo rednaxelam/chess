@@ -10,6 +10,7 @@ class ChessGame {
   #gameStatus = 0
   #color = 'white'
   #moveHistory = []
+  #fiftyMoveRuleCounter = 0
   #test
 
   constructor(test = undefined) {
@@ -57,8 +58,10 @@ class ChessGame {
       if (!this.#board.isEmptySquare(to)) {
         this.#board.removePiece(to)
         this.#board.movePiece(from, to)
+        this.#resetFiftyMoveRuleCounter()
       } else {
         this.#board.movePiece(from, to)
+        this.#incrementFiftyMoveRuleCounter()
       }
     }
 
@@ -76,6 +79,11 @@ class ChessGame {
         this.#gameStatus = 11
         return
       }
+    }
+
+    if (this.#fiftyMoveRuleCounter === 100) {
+      this.#gameStatus = 12
+      return
     }
 
     this.#gameStatus = this.#color === 'white' ? 0 : 1
@@ -100,6 +108,7 @@ class ChessGame {
     // 9 - Black win via timeout
     // 10 - Draw via agreement
     // 11 - Draw via stalemate
+    // 12 - Draw via fifty-move rule
 
     return this.#gameStatus
   }
@@ -201,6 +210,8 @@ class ChessGame {
     if (Math.abs(to[0] - from[0]) === 2) {
       this.#board.getPiece(to).setIsEnPassantable(true)
     }
+
+    this.#resetFiftyMoveRuleCounter()
   }
 
   #moveKing(from, to) {
@@ -214,12 +225,18 @@ class ChessGame {
       } else {
         this.#board.movePiece([c0, 7], [c0, 5])
       }
+
+      this.#incrementFiftyMoveRuleCounter()
     } else {
       if (!this.#board.isEmptySquare(to)) {
         this.#board.removePiece(to)
         this.#board.movePiece(from, to)
+
+        this.#resetFiftyMoveRuleCounter()
       } else {
         this.#board.movePiece(from, to)
+
+        this.#incrementFiftyMoveRuleCounter()
       }
     }
   }
@@ -236,6 +253,14 @@ class ChessGame {
     return [coords[0] + diff[0], coords[1] + diff[1]]
   }
 
+  #incrementFiftyMoveRuleCounter() {
+    this.#fiftyMoveRuleCounter += 1
+  }
+
+  #resetFiftyMoveRuleCounter() {
+    this.#fiftyMoveRuleCounter = 0
+  }
+
   // methods for testing only
 
   expectGameStatus(expectedGameStatus) {
@@ -244,7 +269,7 @@ class ChessGame {
     }
 
     if (this.#gameStatus !== expectedGameStatus) {
-      throw new Error('Expected gameStatus does not match actual gameStatus')
+      throw new Error(`Expected game status ${expectedGameStatus} does not match actual game status ${this.#gameStatus}`)
     }
   }
 

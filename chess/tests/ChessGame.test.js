@@ -1,4 +1,5 @@
 const ChessGame = require('../ChessGame')
+const { isCoordsEqual, addDiff } = require('../utils')
 
 describe('ChessGame Testing', () => {
   describe('Full games', () => {
@@ -237,5 +238,78 @@ describe('ChessGame Testing', () => {
     chessGame.expectGameStatus(7)
     chessGame.drawViaAgreement()
     chessGame.expectGameStatus(7)
+  })
+
+  test('50-move rule works as expected', () => {
+    const chessGame = new ChessGame('test')
+    chessGame.playMove([1, 4], [2, 4])
+    chessGame.playMove([6, 4], [5, 4])
+    chessGame.playMove([0, 3], [3, 6])
+    chessGame.playMove([7, 3], [4, 6])
+    // need to avoid triggering the threefold repetition rule during this test
+    let whiteQueenCoords = [3, 6]
+    while (!isCoordsEqual(whiteQueenCoords, [3, 0])) {
+      let oldWhiteQueenCoords = [whiteQueenCoords[0], whiteQueenCoords[1]]
+      whiteQueenCoords = addDiff(oldWhiteQueenCoords, [0, -1])
+      chessGame.playMove(oldWhiteQueenCoords, whiteQueenCoords)
+      chessGame.playMove([4, 6], [4, 7])
+
+      oldWhiteQueenCoords = [whiteQueenCoords[0], whiteQueenCoords[1]]
+      whiteQueenCoords = addDiff(oldWhiteQueenCoords, [0, -1])
+      chessGame.playMove(oldWhiteQueenCoords, whiteQueenCoords)
+      chessGame.playMove([4, 7], [4, 6])
+    }
+    chessGame.playMove([0, 6], [2, 7])
+    chessGame.playMove([4, 6], [4, 0])
+    chessGame.playMove([0, 5], [5, 0])
+    chessGame.playMove([6, 7], [5, 7])
+    // 17 total moves without a reset at this point
+    chessGame.playMove([5, 0], [6, 1])
+    chessGame.playMove([6, 6], [5, 6])
+    // 0 moves without a reset at this point
+    let i = 0
+    whiteQueenCoords = [3, 0]
+    let whiteQueenDiff = [0, 1]
+    let blackQueenCoords = [4, 0]
+    let blackQueenCoordsA = [4, 0]
+    let blackQueenCoordsB = [4, 1]
+    while (i < 99) {
+      if (i % 2 === 0) {
+        if (isCoordsEqual(whiteQueenCoords, [3, 7])) {
+          whiteQueenDiff = [0, -1]
+        } else if (isCoordsEqual(whiteQueenCoords, [3, 0])) {
+          whiteQueenDiff = [0, 1]
+        }
+        const oldWhiteQueenCoords = [whiteQueenCoords[0], whiteQueenCoords[1]]
+        whiteQueenCoords = addDiff(oldWhiteQueenCoords, whiteQueenDiff)
+        chessGame.playMove(oldWhiteQueenCoords, whiteQueenCoords)
+        chessGame.expectGameStatus(1)
+      } else {
+        if (isCoordsEqual(whiteQueenCoords, [3, 0])) {
+          blackQueenCoordsA = addDiff(blackQueenCoordsA, [0, 2])
+          blackQueenCoordsB = addDiff(blackQueenCoordsB, [0, 2])
+          chessGame.playMove(blackQueenCoords, blackQueenCoordsA)
+          blackQueenCoords = [blackQueenCoordsA[0], blackQueenCoordsA[1]]
+          chessGame.expectGameStatus(0)
+        } else if (isCoordsEqual(blackQueenCoords, blackQueenCoordsA)) {
+          blackQueenCoords = [blackQueenCoordsB[0], blackQueenCoordsB[1]]
+          chessGame.playMove(blackQueenCoordsA, blackQueenCoordsB)
+          chessGame.expectGameStatus(0)
+        } else {
+          blackQueenCoords = [blackQueenCoordsA[0], blackQueenCoordsA[1]]
+          chessGame.playMove(blackQueenCoordsB, blackQueenCoordsA)
+          chessGame.expectGameStatus(0)
+        }
+      }
+
+      i++
+
+    }
+
+    // 99 total moves without a reset at this point
+    chessGame.expectGameStatus(1)
+    chessGame.playMove([7, 4], [6, 4])
+    // 100 total moves without a reset at this point
+    chessGame.expectGameStatus(12)
   })
 })
