@@ -22,6 +22,8 @@ class ChessGame {
     this.#board = new AugmentedBoard(test)
     const opponentControlInformation = new OpponentControlInformation(this.#board, 'black')
     this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
+
+    this.#addAndComparePositionToPositionHistory()
   }
 
   playMove(from, to, promoteTo) {
@@ -61,6 +63,7 @@ class ChessGame {
         this.#board.removePiece(to)
         this.#board.movePiece(from, to)
         this.#resetFiftyMoveRuleCounter()
+        this.#clearPositionHistory()
       } else {
         this.#board.movePiece(from, to)
         this.#incrementFiftyMoveRuleCounter()
@@ -81,6 +84,30 @@ class ChessGame {
         this.#gameStatus = 11
         return
       }
+    }
+
+    // it is assumed in the position history methods that positions in which a pawn can be taken via en passant will not be added to
+    // the player history
+    const movedPiece = this.#board.getPiece(to)
+    if (movedPiece.isEnPassantable()) {
+      const potentialEnPassantFromCoords1 = this.#addDiff(to, [0, -1])
+      const potentialEnPassantFromCoords2 = this.#addDiff(to, [0, 1])
+      const potentialEnPassantToCoords = this.#color === 'white' ? this.#addDiff(to, [1, 0]) : this.#addDiff(to, [-1, 0])
+      if (this.#isValidCoords(potentialEnPassantFromCoords1)
+          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords1)
+          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords1, potentialEnPassantToCoords)) {
+        // don't add this position to the position history
+      } else if (this.#isValidCoords(potentialEnPassantFromCoords2)
+          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords2)
+          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords2, potentialEnPassantToCoords)) {
+        // don't add this position to the position history
+      } else {
+        this.#addAndComparePositionToPositionHistory()
+        if (!this.isActiveGame()) return
+      }
+    } else {
+      this.#addAndComparePositionToPositionHistory()
+      if (!this.isActiveGame()) return
     }
 
     if (this.#fiftyMoveRuleCounter === 100) {
@@ -215,6 +242,7 @@ class ChessGame {
     }
 
     this.#resetFiftyMoveRuleCounter()
+    this.#clearPositionHistory()
   }
 
   #moveKing(from, to) {
@@ -236,6 +264,7 @@ class ChessGame {
         this.#board.movePiece(from, to)
 
         this.#resetFiftyMoveRuleCounter()
+        this.#clearPositionHistory()
       } else {
         this.#board.movePiece(from, to)
 
@@ -348,7 +377,7 @@ class ChessGame {
     return true
   }
 
-  #compareCurrentToPreviousPositions() {
+  #addAndComparePositionToPositionHistory() {
     const color = this.#color
     const positionHistory = color === 'white' ? this.#whitePositionHistory : this.#blackPositionHistory
     const currentPosition = this.#getCurrentPosition()
@@ -369,6 +398,12 @@ class ChessGame {
     if (!positionHasAppearedBefore) {
       positionHistory.push(currentPosition)
     }
+  }
+
+  #playerPawnOccupiesSquare(coords) {
+    return (!this.#board.isEmptySquare(coords)
+      && this.#board.getPiece(coords).getColor() === this.#color
+      && this.#board.getPiece(coords).getType() === 'pawn')
   }
 
   // methods for testing only
@@ -500,6 +535,9 @@ class ChessGame {
 
     const opponentControlInformation = new OpponentControlInformation(this.#board, opponentColor)
     this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
+
+    this.#clearPositionHistory()
+    this.#addAndComparePositionToPositionHistory()
   }
 }
 
