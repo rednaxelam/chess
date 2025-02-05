@@ -11,6 +11,8 @@ class ChessGame {
   #color = 'white'
   #moveHistory = []
   #fiftyMoveRuleCounter = 0
+  #whitePositionHistory = []
+  #blackPositionHistory = []
   #test
 
   constructor(test = undefined) {
@@ -109,6 +111,7 @@ class ChessGame {
     // 10 - Draw via agreement
     // 11 - Draw via stalemate
     // 12 - Draw via fifty-move rule
+    // 13 - Draw via threefold repetition
 
     return this.#gameStatus
   }
@@ -259,6 +262,113 @@ class ChessGame {
 
   #resetFiftyMoveRuleCounter() {
     this.#fiftyMoveRuleCounter = 0
+  }
+
+  #clearPositionHistory() {
+    this.#blackPositionHistory = []
+    this.#whitePositionHistory = []
+  }
+
+  #getCurrentPosition() {
+    const color = this.#color
+    const whitePieceList = this.#board.getWhitePieceListIterable()
+    const blackPieceList = this.#board.getBlackPieceListIterable()
+    let canCastleQueenside = false
+    let canCastleKingside = false
+    let c0 = color === 'white' ? 0 : 7
+    if (!this.#board.isEmptySquare([c0, 4])
+        && this.#board.getPiece([c0, 4]).getType() === 'king'
+        && this.#board.getPiece([c0, 4]).getColor() === color) {
+      canCastleQueenside = this.#playerMovementInformation.isValidMove([c0, 4], [c0, 2])
+      canCastleKingside = this.#playerMovementInformation.isValidMove([c0, 4], [c0, 6])
+    }
+
+
+    return {
+      color,
+      whitePieceList,
+      blackPieceList,
+      canCastleQueenside,
+      canCastleKingside,
+      count: 1,
+    }
+  }
+
+  #isSamePosition(oldPosition, currentPosition) {
+
+    const isSamePiecePosition = (oldPieceList, currentPieceList) => {
+      let continueFlag = true
+      while (continueFlag) {
+        const oldPieceElement = oldPieceList.popCurrentPieceElement()
+        const oldPieceCoords = oldPieceElement.coords
+        const oldPiece = oldPieceElement.piece
+
+        const currentPieceElement = currentPieceList.popCurrentPieceElement()
+        const currentPieceCoords = currentPieceElement.coords
+        const currentPiece = currentPieceElement.piece
+
+        // piece lists are sorted by coordinates. If a pair of coordinates are not equal, it means that coordinates that the pieces occupy
+        // are not the same between the two lists
+        if (!this.#isCoordsEqual(oldPieceCoords, currentPieceCoords)) {
+          oldPieceList.reset()
+          currentPieceList.reset()
+          return false
+        } else {
+          if (oldPiece.getType() !== currentPiece.getType()) {
+            oldPieceList.reset()
+            currentPieceList.reset()
+            return false
+          }
+        }
+
+        // both position histories are reset after pawn movement and taking of pieces. This will mean that the piece lists for a position for
+        // a given color will always have the same length, and thus there is no need to test that the piecelists are of the same length
+        continueFlag = currentPieceList.hasNextPieceElement()
+      }
+
+      oldPieceList.reset()
+      currentPieceList.reset()
+      return true
+    }
+
+    if (oldPosition.color !== currentPosition.color) {
+      return false
+    }
+
+    if (oldPosition.canCastleQueenside !== currentPosition.canCastleQueenside
+        || oldPosition.canCastleKingside !== currentPosition.canCastleKingside) {
+      return false
+    }
+
+    if (!isSamePiecePosition(oldPosition.whitePieceList, currentPosition.whitePieceList)
+        || !isSamePiecePosition(oldPosition.blackPieceList, currentPosition.blackPieceList)) {
+      return false
+    }
+
+    return true
+  }
+
+  #compareCurrentToPreviousPositions() {
+    const color = this.#color
+    const positionHistory = color === 'white' ? this.#whitePositionHistory : this.#blackPositionHistory
+    const currentPosition = this.#getCurrentPosition()
+
+    let positionHasAppearedBefore = false
+    for (const oldPosition of positionHistory) {
+      if (this.#isSamePosition(oldPosition, currentPosition)) {
+        positionHasAppearedBefore = true
+        oldPosition.count += 1
+        if (oldPosition.count === 3) {
+          this.#gameStatus = 13
+          return
+        }
+        break
+      }
+    }
+
+    if (!positionHasAppearedBefore) {
+      positionHistory.push(currentPosition)
+    }
   }
 
   // methods for testing only
