@@ -103,7 +103,6 @@ class ChessGame {
         // don't add this position to the position history
       } else {
         this.#addAndComparePositionToPositionHistory()
-        if (!this.isActiveGame()) return
       }
     } else {
       this.#addAndComparePositionToPositionHistory()
@@ -299,30 +298,42 @@ class ChessGame {
   }
 
   #getCurrentPosition() {
+    const pieceHasNotMoved = (coords) => {
+      return (!this.#board.isEmptySquare(coords)
+          && this.#board.getPiece(coords).getMoveCount() === 0)
+    }
+
     const color = this.#color
     const whitePieceList = this.#board.getWhitePieceListIterable()
     const blackPieceList = this.#board.getBlackPieceListIterable()
-    let canCastleQueenside = false
-    let canCastleKingside = false
-    let c0 = color === 'white' ? 0 : 7
-    if (!this.#board.isEmptySquare([c0, 4])
-        && this.#board.getPiece([c0, 4]).getType() === 'king'
-        && this.#board.getPiece([c0, 4]).getColor() === color) {
-      canCastleQueenside = this.#playerMovementInformation.isValidMove([c0, 4], [c0, 2])
-      canCastleKingside = this.#playerMovementInformation.isValidMove([c0, 4], [c0, 6])
-    }
-
+    let whiteHasQueensideCastlingRights = pieceHasNotMoved([0, 4]) && pieceHasNotMoved([0, 0])
+    let whiteHasKingsideCastlingRights = pieceHasNotMoved([0, 4]) && pieceHasNotMoved([0, 7])
+    let blackHasQueensideCastlingRights = pieceHasNotMoved([7, 4]) && pieceHasNotMoved([7, 0])
+    let blackHasKingsideCastlingRights = pieceHasNotMoved([7, 4]) && pieceHasNotMoved([7, 7])
 
     return {
       color,
       whitePieceList,
       blackPieceList,
-      canCastleQueenside,
-      canCastleKingside,
+      whiteHasQueensideCastlingRights,
+      whiteHasKingsideCastlingRights,
+      blackHasQueensideCastlingRights,
+      blackHasKingsideCastlingRights,
       count: 1,
     }
   }
 
+  #isSameCastlingRights(oldPosition, currentPosition) {
+    return (oldPosition.whiteHasQueensideCastlingRights === currentPosition.whiteHasQueensideCastlingRights
+            && oldPosition.whiteHasKingsideCastlingRights === currentPosition.whiteHasKingsideCastlingRights
+            && oldPosition.blackHasQueensideCastlingRights === currentPosition.blackHasQueensideCastlingRights
+            && oldPosition.blackHasKingsideCastlingRights === currentPosition.blackHasKingsideCastlingRights)
+  }
+
+  // the following method assumes that:
+  //  - positions for each player are stored in a separate history
+  //  - no positions where taking via en passant is possible are part of the history
+  //  - all positions for both player position histories have the same castling rights
   #isSamePosition(oldPosition, currentPosition) {
 
     const isSamePiecePosition = (oldPieceList, currentPieceList) => {
@@ -360,15 +371,6 @@ class ChessGame {
       return true
     }
 
-    if (oldPosition.color !== currentPosition.color) {
-      return false
-    }
-
-    if (oldPosition.canCastleQueenside !== currentPosition.canCastleQueenside
-        || oldPosition.canCastleKingside !== currentPosition.canCastleKingside) {
-      return false
-    }
-
     if (!isSamePiecePosition(oldPosition.whitePieceList, currentPosition.whitePieceList)
         || !isSamePiecePosition(oldPosition.blackPieceList, currentPosition.blackPieceList)) {
       return false
@@ -381,6 +383,13 @@ class ChessGame {
     const color = this.#color
     const positionHistory = color === 'white' ? this.#whitePositionHistory : this.#blackPositionHistory
     const currentPosition = this.#getCurrentPosition()
+
+    const opponentPositionHistory = color === 'white' ? this.#blackPositionHistory : this.#whitePositionHistory
+    if (opponentPositionHistory.length > 0) {
+      if (!this.#isSameCastlingRights(opponentPositionHistory[0], currentPosition)) {
+        this.#clearPositionHistory()
+      }
+    }
 
     let positionHasAppearedBefore = false
     for (const oldPosition of positionHistory) {
