@@ -114,6 +114,10 @@ class ChessGame {
       return
     }
 
+    if (this.#bothPlayersHaveInsufficientMaterial()) {
+      this.#gameStatus = 14
+    }
+
     this.#gameStatus = this.#color === 'white' ? 0 : 1
   }
 
@@ -138,6 +142,8 @@ class ChessGame {
     // 11 - Draw via stalemate
     // 12 - Draw via fifty-move rule
     // 13 - Draw via threefold repetition
+    // 14 - Draw via insufficient material
+    // 15 - Draw via timeout vs insufficient material
 
     return this.#gameStatus
   }
@@ -182,13 +188,22 @@ class ChessGame {
   whiteTimeout() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 9
+    if (this.#playerHasInsufficientMaterialAfterTimeout('black')) {
+      this.#gameStatus = 15
+    } else {
+      this.#gameStatus = 9
+    }
   }
 
   blackTimeout() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 8
+    if (this.#playerHasInsufficientMaterialAfterTimeout('white')) {
+      this.#gameStatus = 15
+    } else {
+      this.#gameStatus = 8
+    }
+
   }
 
   drawViaAgreement() {
@@ -413,6 +428,80 @@ class ChessGame {
     return (!this.#board.isEmptySquare(coords)
       && this.#board.getPiece(coords).getColor() === this.#color
       && this.#board.getPiece(coords).getType() === 'pawn')
+  }
+
+  #bothPlayersHaveInsufficientMaterial() {
+    const playerOnlyHasKingAndMinorPiece = (pieceList) => {
+      if (pieceList.getLength() !== 2) {
+        return false
+      } else {
+        let continueFlag = true
+
+        while (continueFlag) {
+          const pieceType = pieceList.popCurrentPieceElement().piece.getType()
+          if (pieceType !== 'king' && pieceType !== 'knight' && pieceType !== 'bishop') return false
+
+          continueFlag = pieceList.hasNextPieceElement()
+        }
+        return true
+      }
+    }
+
+    const playerOnlyHasKing = (pieceList) => {
+      return pieceList.getLength() === 1
+    }
+
+    const playerOnlyHasKingAndTwoKnights = (pieceList) => {
+      if (pieceList.getLength() !== 3) {
+        return false
+      } else {
+        let continueFlag = true
+
+        while (continueFlag) {
+          const pieceType = pieceList.popCurrentPieceElement().piece.getType()
+          if (pieceType !== 'king' && pieceType !== 'knight') return false
+
+          continueFlag = pieceList.hasNextPieceElement()
+        }
+        return true
+      }
+    }
+
+    const whitePieceList = this.#board.getWhitePieceListIterable()
+    const blackPieceList = this.#board.getBlackPieceListIterable()
+
+    if (whitePieceList.getLength() > 3 || blackPieceList.getLength() > 3) {
+      return false
+    } else if ((playerOnlyHasKing(whitePieceList) || playerOnlyHasKingAndMinorPiece(whitePieceList))
+        && (playerOnlyHasKing(blackPieceList) || playerOnlyHasKingAndMinorPiece(blackPieceList))) {
+      return true
+    } else if ((playerOnlyHasKing(whitePieceList) && playerOnlyHasKingAndTwoKnights(blackPieceList))
+        || (playerOnlyHasKingAndTwoKnights(whitePieceList) && playerOnlyHasKing(blackPieceList))) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  #playerHasInsufficientMaterialAfterTimeout(color) {
+
+    const playerPieceList = color === 'white' ? this.#board.getWhitePieceListIterable() : this.#board.getBlackPieceListIterable()
+
+    if (playerPieceList.getLength() > 2) {
+      return false
+    } else if (playerPieceList.getLength() === 1) {
+      return true
+    } else {
+      let continueFlag = true
+
+      while (continueFlag) {
+        const pieceType = playerPieceList.popCurrentPieceElement().piece.getType()
+        if (pieceType !== 'king' && pieceType !== 'knight' && pieceType !== 'bishop') return false
+
+        continueFlag = playerPieceList.hasNextPieceElement()
+      }
+      return true
+    }
   }
 
   // methods for testing only

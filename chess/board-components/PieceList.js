@@ -150,6 +150,10 @@ class PieceListIterable {
     this.#currentIndex = 0
   }
 
+  getLength() {
+    return this.#pieceList.length
+  }
+
 }
 
 module.exports = PieceList
