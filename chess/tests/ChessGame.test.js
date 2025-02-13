@@ -394,9 +394,76 @@ describe('ChessGame Testing', () => {
         [[[0, 5], [2, 3]], 13]
       ])
     })
+  })
 
-    test('', () => {
+  describe('Insufficient Material', () => {
+    test('There is insufficient material if both players only have a king or a king and a minor piece', () => {
+      const chessGame = new ChessGame('test')
+      chessGame.initialiseBoard([[[0, 4], [0, 4]], [[7, 4], [7, 4]], [[7, 3], [7, 3]]], 'white', [[[0, 4], 2], [[7, 4], 2]])
+      chessGame.expectGameStatusesAfterMoves([[[[0, 4], [1, 4]], 1],
+        [[[7, 3], [2, 3]], 0],
+        [[[1, 4], [2, 3]], 14]
+      ])
 
+      const chessGame2 = new ChessGame('test')
+      const moveList2 = [[[7, 4], [3, 7]], [[7, 3], [7, 6]], [[0, 5], [0, 3]], [[0, 4], [0, 4]]]
+      chessGame2.initialiseBoard(moveList2, 'black', [[[3, 7], 4], [[0, 4], 2]])
+      chessGame2.expectGameStatusesAfterMoves([[[[7, 6], [3, 6]], 0],
+        [[[0, 3], [3, 6]], 14]
+      ])
+
+      const chessGame3 = new ChessGame('test')
+      const moveList3 = [[[7, 4], [7, 4]], [[7, 2], [5, 2]], [[7, 5], [5, 3]], [[0, 1], [3, 3]], [[0, 6], [3, 5]], [[0, 4], [0, 4]]]
+      chessGame3.initialiseBoard(moveList3, 'white')
+      chessGame3.expectGameStatusesAfterMoves([[[[3, 3], [5, 2]], 1],
+        [[[5, 3], [3, 5]], 14]
+      ])
+    })
+
+    test('There is insufficient material if one player has a king and the other a king and two knights', () => {
+      const chessGame = new ChessGame('test')
+      const moveList = [[[7, 4], [7, 4]], [[7, 1], [6, 2]], [[7, 6], [5, 3]], [[0, 1], [2, 4]], [[0, 4], [0, 4]]]
+      chessGame.initialiseBoard(moveList, 'white')
+      chessGame.expectGameStatusesAfterMoves([[[[2, 4], [3, 2]], 1],
+        [[[5, 3], [3, 2]], 14]
+      ])
+
+      const chessGame2 = new ChessGame('test')
+      const moveList2 = [[[7, 4], [7, 4]], [[7, 1], [5, 2]], [[7, 6], [5, 3]], [[0, 1], [1, 4]], [[0, 6], [3, 4]], [[0, 4], [0, 4]]]
+      chessGame2.initialiseBoard(moveList2, 'black')
+      chessGame2.expectGameStatusesAfterMoves([[[[5, 3], [3, 4]], 0],
+        [[[1, 4], [3, 3]], 1],
+        [[[5, 2], [3, 3]], 14]
+      ])
+    })
+
+    test('Timeout vs insufficient material occurs only when the opponent has only a king or a king and a minor piece', () => {
+      const chessGame = new ChessGame('test')
+      chessGame.initialiseBoard([[[7, 4], [7, 5]], [[0, 4], [5, 4]], [[0, 3], [0, 6]]], 'white')
+      chessGame.expectGameStatusesAfterMoves([[[[0, 6], [6, 0]], 1],
+        [[[7, 5], [7, 4]], 0]
+      ])
+      chessGame.whiteTimeout()
+      chessGame.expectGameStatus(15)
+
+      const chessGame2 = new ChessGame('test')
+      const moveList2 = [[[7, 4], [7, 4]], [[7, 3], [7, 3]], [[7, 0], [7, 2]], [[7, 7], [7, 1]],
+        [[0, 4], [0, 4]], [[0, 1], [0, 3]], [[0, 6], [0, 6]]]
+      chessGame2.initialiseBoard(moveList2, 'black')
+      chessGame2.expectGameStatusesAfterMoves([[[[7, 1], [1, 1]], 0],
+        [[[0, 6], [1, 4]], 1]
+      ])
+      chessGame2.blackTimeout()
+      chessGame2.expectGameStatus(8)
+
+      const chessGame3 = new ChessGame('test')
+      const moveList3 = [[[7, 4], [7, 4]], [[7, 2], [5, 2]], [[7, 5], [5, 3]], [[0, 1], [3, 3]], [[0, 5], [3, 4]], [[0, 4], [0, 4]]]
+      chessGame3.initialiseBoard(moveList3, 'white')
+      chessGame3.expectGameStatusesAfterMoves([[[[3, 3], [5, 2]], 1],
+        [[[5, 3], [3, 1]], 0]
+      ])
+      chessGame3.whiteTimeout()
+      chessGame3.expectGameStatus(15)
     })
   })
 })
