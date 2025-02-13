@@ -116,6 +116,7 @@ class ChessGame {
 
     if (this.#bothPlayersHaveInsufficientMaterial()) {
       this.#gameStatus = 14
+      return
     }
 
     this.#gameStatus = this.#color === 'white' ? 0 : 1
