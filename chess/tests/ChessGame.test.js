@@ -197,18 +197,18 @@ describe('ChessGame Testing', () => {
       chessGame.initialiseBoard([[[6, 6], [6, 6]], [[6, 5], [5, 5]], [[7, 4], [3, 4]],
         [[1, 5], [4, 5]], [[1, 7], [3, 7]], [[0, 4], [4, 7]]], 'black', [[[4, 5], 2], [[3, 7], 1], [[5, 5], 1]])
       chessGame.playMove([3, 4], [4, 5])
-      chessGame.expectGameStatus(11)
+      chessGame.expectGameStatus(13)
 
       const chessGame2 = new ChessGame('test')
       const moveList2 = [[[0, 4], [6, 5]], [[0, 2], [2, 2]], [[1, 0], [2, 0]], [[6, 0], [3, 0]], [[7, 4], [6, 7]]]
       chessGame2.initialiseBoard(moveList2, 'white', [[[2, 0], 1], [[3, 0], 2]])
       chessGame2.playMove([2, 2], [6, 6])
-      chessGame2.expectGameStatus(11)
+      chessGame2.expectGameStatus(13)
 
       const chessGame3 = new ChessGame('test')
       chessGame3.initialiseBoard([[[7, 4], [7, 5]], [[0, 4], [4, 5]], [[1, 5], [6, 5]]], 'white', [[[6, 5], 4]])
       chessGame3.playMove([4, 5], [5, 5])
-      chessGame3.expectGameStatus(11)
+      chessGame3.expectGameStatus(13)
 
       const chessGame4 = new ChessGame('test')
       const moveList4 = [[[0, 4], [1, 3]], [[6, 4], [1, 4]], [[6, 6], [1, 6]], [[6, 7], [1, 7]], [[7, 4], [0, 7]],
@@ -216,7 +216,7 @@ describe('ChessGame Testing', () => {
       const moveCountList4 = [[[1, 4], 4], [[1, 6], 4], [[1, 7], 4], [[0, 7], 12], [[0, 6], 6], [[1, 3], 3]]
       chessGame4.initialiseBoard(moveList4, 'white', moveCountList4)
       chessGame4.playMove([1, 3], [0, 4])
-      chessGame4.expectGameStatus(11)
+      chessGame4.expectGameStatus(13)
     })
   })
 
@@ -310,7 +310,7 @@ describe('ChessGame Testing', () => {
     chessGame.expectGameStatus(1)
     chessGame.playMove([7, 4], [6, 4])
     // 100 total moves without a reset at this point
-    chessGame.expectGameStatus(12)
+    chessGame.expectGameStatus(14)
   })
 
   describe('Threefold repetition rule', () => {
@@ -325,7 +325,7 @@ describe('ChessGame Testing', () => {
         [[[2, 5], [0, 6]], 1],
         [[[5, 5], [7, 6]], 0],
         [[[0, 6], [2, 5]], 1],
-        [[[7, 6], [5, 5]], 13]
+        [[[7, 6], [5, 5]], 15]
       ])
 
       const chessGame2 = new ChessGame('test')
@@ -356,7 +356,7 @@ describe('ChessGame Testing', () => {
         [[[3, 3], [3, 4]], 1],
         [[[5, 3], [5, 4]], 0],
         [[[3, 4], [3, 3]], 1],
-        [[[5, 4], [5, 3]], 13],
+        [[[5, 4], [5, 3]], 15],
       ])
     })
 
@@ -373,7 +373,7 @@ describe('ChessGame Testing', () => {
         [[[1, 4], [0, 4]], 1],
         [[[6, 4], [7, 4]], 0],
         [[[0, 4], [1, 4]], 1],
-        [[[7, 4], [6, 4]], 13]
+        [[[7, 4], [6, 4]], 15]
       ])
     })
 
@@ -391,7 +391,7 @@ describe('ChessGame Testing', () => {
         [[[7, 2], [6, 3]], 0],
         [[[2, 3], [0, 5]], 1],
         [[[6, 3], [7, 2]], 0],
-        [[[0, 5], [2, 3]], 13]
+        [[[0, 5], [2, 3]], 15]
       ])
     })
   })
@@ -402,21 +402,21 @@ describe('ChessGame Testing', () => {
       chessGame.initialiseBoard([[[0, 4], [0, 4]], [[7, 4], [7, 4]], [[7, 3], [7, 3]]], 'white', [[[0, 4], 2], [[7, 4], 2]])
       chessGame.expectGameStatusesAfterMoves([[[[0, 4], [1, 4]], 1],
         [[[7, 3], [2, 3]], 0],
-        [[[1, 4], [2, 3]], 14]
+        [[[1, 4], [2, 3]], 16]
       ])
 
       const chessGame2 = new ChessGame('test')
       const moveList2 = [[[7, 4], [3, 7]], [[7, 3], [7, 6]], [[0, 5], [0, 3]], [[0, 4], [0, 4]]]
       chessGame2.initialiseBoard(moveList2, 'black', [[[3, 7], 4], [[0, 4], 2]])
       chessGame2.expectGameStatusesAfterMoves([[[[7, 6], [3, 6]], 0],
-        [[[0, 3], [3, 6]], 14]
+        [[[0, 3], [3, 6]], 16]
       ])
 
       const chessGame3 = new ChessGame('test')
       const moveList3 = [[[7, 4], [7, 4]], [[7, 2], [5, 2]], [[7, 5], [5, 3]], [[0, 1], [3, 3]], [[0, 6], [3, 5]], [[0, 4], [0, 4]]]
       chessGame3.initialiseBoard(moveList3, 'white')
       chessGame3.expectGameStatusesAfterMoves([[[[3, 3], [5, 2]], 1],
-        [[[5, 3], [3, 5]], 14]
+        [[[5, 3], [3, 5]], 16]
       ])
     })
 
@@ -425,7 +425,7 @@ describe('ChessGame Testing', () => {
       const moveList = [[[7, 4], [7, 4]], [[7, 1], [6, 2]], [[7, 6], [5, 3]], [[0, 1], [2, 4]], [[0, 4], [0, 4]]]
       chessGame.initialiseBoard(moveList, 'white')
       chessGame.expectGameStatusesAfterMoves([[[[2, 4], [3, 2]], 1],
-        [[[5, 3], [3, 2]], 14]
+        [[[5, 3], [3, 2]], 16]
       ])
 
       const chessGame2 = new ChessGame('test')
@@ -433,7 +433,7 @@ describe('ChessGame Testing', () => {
       chessGame2.initialiseBoard(moveList2, 'black')
       chessGame2.expectGameStatusesAfterMoves([[[[5, 3], [3, 4]], 0],
         [[[1, 4], [3, 3]], 1],
-        [[[5, 2], [3, 3]], 14]
+        [[[5, 2], [3, 3]], 16]
       ])
     })
 
@@ -444,7 +444,7 @@ describe('ChessGame Testing', () => {
         [[[7, 5], [7, 4]], 0]
       ])
       chessGame.whiteTimeout()
-      chessGame.expectGameStatus(15)
+      chessGame.expectGameStatus(17)
 
       const chessGame2 = new ChessGame('test')
       const moveList2 = [[[7, 4], [7, 4]], [[7, 3], [7, 3]], [[7, 0], [7, 2]], [[7, 7], [7, 1]],
@@ -463,7 +463,7 @@ describe('ChessGame Testing', () => {
         [[[5, 3], [3, 1]], 0]
       ])
       chessGame3.whiteTimeout()
-      chessGame3.expectGameStatus(15)
+      chessGame3.expectGameStatus(17)
     })
   })
 })

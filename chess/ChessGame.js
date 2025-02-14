@@ -81,7 +81,7 @@ class ChessGame {
         this.#gameStatus = this.#color === 'white' ? 5 : 4
         return
       } else {
-        this.#gameStatus = 11
+        this.#gameStatus = 13
         return
       }
     }
@@ -110,12 +110,12 @@ class ChessGame {
     }
 
     if (this.#fiftyMoveRuleCounter === 100) {
-      this.#gameStatus = 12
+      this.#gameStatus = 14
       return
     }
 
     if (this.#bothPlayersHaveInsufficientMaterial()) {
-      this.#gameStatus = 14
+      this.#gameStatus = 16
       return
     }
 
@@ -129,22 +129,24 @@ class ChessGame {
   getGameStatus() {
     // Status code guide:
 
-    // 0 - White to play
-    // 1 - Black to play
-    // 2 - White to play, previous move rejected
-    // 3 - Black to play, previous move rejected
-    // 4 - White win via checkmate
-    // 5 - Black win via checkmate
-    // 6 - White win via resignation
-    // 7 - Black win via resignation
-    // 8 - White win via timeout
-    // 9 - Black win via timeout
-    // 10 - Draw via agreement
-    // 11 - Draw via stalemate
-    // 12 - Draw via fifty-move rule
-    // 13 - Draw via threefold repetition
-    // 14 - Draw via insufficient material
-    // 15 - Draw via timeout vs insufficient material
+    //  0 - White to play
+    //  1 - Black to play
+    //  2 - White to play, previous move rejected
+    //  3 - Black to play, previous move rejected
+    //  4 - White win via checkmate
+    //  5 - Black win via checkmate
+    //  6 - White win via resignation
+    //  7 - Black win via resignation
+    //  8 - White win via timeout
+    //  9 - Black win via timeout
+    // 10 - White win via abandonment
+    // 11 - Black win via abandonment
+    // 12 - Draw via agreement
+    // 13 - Draw via stalemate
+    // 14 - Draw via fifty-move rule
+    // 15 - Draw via threefold repetition
+    // 16 - Draw via insufficient material
+    // 17 - Draw via timeout vs insufficient material
 
     return this.#gameStatus
   }
@@ -190,7 +192,7 @@ class ChessGame {
     if (!this.isActiveGame()) return
 
     if (this.#playerHasInsufficientMaterialAfterTimeout('black')) {
-      this.#gameStatus = 15
+      this.#gameStatus = 17
     } else {
       this.#gameStatus = 9
     }
@@ -200,17 +202,30 @@ class ChessGame {
     if (!this.isActiveGame()) return
 
     if (this.#playerHasInsufficientMaterialAfterTimeout('white')) {
-      this.#gameStatus = 15
+      this.#gameStatus = 17
     } else {
       this.#gameStatus = 8
     }
 
   }
 
+  whiteAbandonsGame() {
+    if (!this.isActiveGame()) return
+
+    this.#gameStatus = 11
+  }
+
+  blackAbandonsGame() {
+    if (!this.isActiveGame()) return
+
+
+    this.#gameStatus = 10
+  }
+
   drawViaAgreement() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 10
+    this.#gameStatus = 12
   }
 
   #resetAllStatusEffects() {
@@ -413,7 +428,7 @@ class ChessGame {
         positionHasAppearedBefore = true
         oldPosition.count += 1
         if (oldPosition.count === 3) {
-          this.#gameStatus = 13
+          this.#gameStatus = 15
           return
         }
         break
