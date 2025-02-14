@@ -13,6 +13,7 @@ class ChessGame {
   #fiftyMoveRuleCounter = 0
   #whitePositionHistory = []
   #blackPositionHistory = []
+  #playerKingIsInCheck = false
   #test
 
   constructor(test = undefined) {
@@ -75,9 +76,10 @@ class ChessGame {
     const opponentControlInformation = new OpponentControlInformation(this.#board, this.#color)
     this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
     this.#color = this.#color === 'white' ? 'black' : 'white'
+    this.#playerKingIsInCheck = opponentControlInformation.hasKingInSingleCheck() || opponentControlInformation.hasKingInDoubleCheck()
 
     if (!this.#playerMovementInformation.hasValidMoves()) {
-      if (opponentControlInformation.hasKingInSingleCheck() || opponentControlInformation.hasKingInDoubleCheck()) {
+      if (this.#playerKingIsInCheck) {
         this.#gameStatus = this.#color === 'white' ? 5 : 4
         return
       } else {
@@ -149,6 +151,10 @@ class ChessGame {
     // 17 - Draw via timeout vs insufficient material
 
     return this.#gameStatus
+  }
+
+  isPlayerToMoveInCheck() {
+    return this.#playerKingIsInCheck
   }
 
   getBoardRepresentation() {
@@ -649,6 +655,7 @@ class ChessGame {
 
     const opponentControlInformation = new OpponentControlInformation(this.#board, opponentColor)
     this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
+    this.#playerKingIsInCheck = opponentControlInformation.hasKingInSingleCheck() || opponentControlInformation.hasKingInDoubleCheck()
 
     this.#clearPositionHistory()
     this.#addAndComparePositionToPositionHistory()
