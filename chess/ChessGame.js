@@ -157,29 +157,42 @@ class ChessGame {
     return this.#playerKingIsInCheck
   }
 
-  getBoardRepresentation() {
-    const addPiecesToBoard = (board, pieceList) => {
+  getCurrentGameStateRepresentation() {
+    const getPieceInfo = (pieceList, isPlayerToMove) => {
+      const pieceInfo = {}
       let continueFlag = true
-
       while (continueFlag) {
         const pieceElement = pieceList.popCurrentPieceElement()
         const piece = pieceElement.piece
         const coords = pieceElement.coords
+        const type = piece.getType()
+        const pieceId = piece.getId()
+        const possibleMoves = isPlayerToMove ? this.#playerMovementInformation.getMoveArrayCopy(coords) : null
 
-        board[coords[0]][coords[1]] = piece.getType()
+        pieceInfo[pieceId] = {
+          coords,
+          type,
+          possibleMoves
+        }
 
         continueFlag = pieceList.hasNextPieceElement()
       }
+
+      return pieceInfo
     }
 
-    const board = new Array(8).fill(undefined).map(() => new Array(8).fill(null))
     const whitePieceList = this.#board.getWhitePieceListIterable()
     const blackPieceList = this.#board.getBlackPieceListIterable()
 
-    addPiecesToBoard(board, whitePieceList)
-    addPiecesToBoard(board, blackPieceList)
+    const currentGameStateRepresentation = {
+      gameStatus: this.#gameStatus,
+      playerToMoveColor: this.#color,
+      playerToMoveIsInCheck: this.#playerKingIsInCheck,
+      whitePieceInfo: getPieceInfo(whitePieceList, this.#color === 'white'),
+      blackPieceInfo: getPieceInfo(blackPieceList, this.#color === 'black'),
+    }
 
-    return board
+    return currentGameStateRepresentation
   }
 
   whiteResigns() {
