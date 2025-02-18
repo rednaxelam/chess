@@ -146,10 +146,6 @@ class PieceListIterable {
     return this.#pieceList[this.#currentIndex - 1]
   }
 
-  reset() {
-    this.#currentIndex = 0
-  }
-
   getLength() {
     return this.#pieceList.length
   }

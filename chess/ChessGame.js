@@ -14,6 +14,7 @@ class ChessGame {
   #whitePositionHistory = []
   #blackPositionHistory = []
   #playerKingIsInCheck = false
+  #castlingRights = { whiteQueenside: true, whiteKingside: true, blackQueenside: true, blackKingside: true }
   #test
 
   constructor(test = undefined) {
@@ -88,28 +89,8 @@ class ChessGame {
       }
     }
 
-    // it is assumed in the position history methods that positions in which a pawn can be taken via en passant will not be added to
-    // the player history
-    const movedPiece = this.#board.getPiece(to)
-    if (movedPiece.isEnPassantable()) {
-      const potentialEnPassantFromCoords1 = this.#addDiff(to, [0, -1])
-      const potentialEnPassantFromCoords2 = this.#addDiff(to, [0, 1])
-      const potentialEnPassantToCoords = this.#color === 'white' ? this.#addDiff(to, [1, 0]) : this.#addDiff(to, [-1, 0])
-      if (this.#isValidCoords(potentialEnPassantFromCoords1)
-          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords1)
-          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords1, potentialEnPassantToCoords)) {
-        // don't add this position to the position history
-      } else if (this.#isValidCoords(potentialEnPassantFromCoords2)
-          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords2)
-          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords2, potentialEnPassantToCoords)) {
-        // don't add this position to the position history
-      } else {
-        this.#addAndComparePositionToPositionHistory()
-      }
-    } else {
-      this.#addAndComparePositionToPositionHistory()
-      if (!this.isActiveGame()) return
-    }
+    this.#addAndComparePositionToPositionHistory(piece, from, to)
+    if (!this.isActiveGame()) return
 
     if (this.#fiftyMoveRuleCounter === 100) {
       this.#gameStatus = 14
@@ -347,106 +328,89 @@ class ChessGame {
     this.#whitePositionHistory = []
   }
 
-  #getCurrentPosition() {
-    const pieceHasNotMoved = (coords) => {
-      return (!this.#board.isEmptySquare(coords)
-          && this.#board.getPiece(coords).getMoveCount() === 0)
+  #getCurrentPiecePosition() {
+    const getCoordsTypeList = (pieceList) => {
+      const coordsTypeList = []
+      let continueFlag = true
+      while (continueFlag) {
+        const pieceElement = pieceList.popCurrentPieceElement()
+        const coords = pieceElement.coords
+        const type = pieceElement.piece.getType()
+        coordsTypeList.push({ coords, type })
+
+        continueFlag = pieceList.hasNextPieceElement()
+      }
+      return coordsTypeList
     }
 
-    const color = this.#color
     const whitePieceList = this.#board.getWhitePieceListIterable()
     const blackPieceList = this.#board.getBlackPieceListIterable()
-    let whiteHasQueensideCastlingRights = pieceHasNotMoved([0, 4]) && pieceHasNotMoved([0, 0])
-    let whiteHasKingsideCastlingRights = pieceHasNotMoved([0, 4]) && pieceHasNotMoved([0, 7])
-    let blackHasQueensideCastlingRights = pieceHasNotMoved([7, 4]) && pieceHasNotMoved([7, 0])
-    let blackHasKingsideCastlingRights = pieceHasNotMoved([7, 4]) && pieceHasNotMoved([7, 7])
+
+    const whitePiecePosition = getCoordsTypeList(whitePieceList)
+    const blackPiecePosition = getCoordsTypeList(blackPieceList)
 
     return {
-      color,
-      whitePieceList,
-      blackPieceList,
-      whiteHasQueensideCastlingRights,
-      whiteHasKingsideCastlingRights,
-      blackHasQueensideCastlingRights,
-      blackHasKingsideCastlingRights,
+      whitePiecePosition,
+      blackPiecePosition,
       count: 1,
     }
-  }
-
-  #isSameCastlingRights(oldPosition, currentPosition) {
-    return (oldPosition.whiteHasQueensideCastlingRights === currentPosition.whiteHasQueensideCastlingRights
-            && oldPosition.whiteHasKingsideCastlingRights === currentPosition.whiteHasKingsideCastlingRights
-            && oldPosition.blackHasQueensideCastlingRights === currentPosition.blackHasQueensideCastlingRights
-            && oldPosition.blackHasKingsideCastlingRights === currentPosition.blackHasKingsideCastlingRights)
   }
 
   // the following method assumes that:
   //  - positions for each player are stored in a separate history
   //  - no positions where taking via en passant is possible are part of the history
   //  - all positions for both player position histories have the same castling rights
-  #isSamePosition(oldPosition, currentPosition) {
+  #isSamePosition(oldPiecePosition, currentPiecePosition) {
 
-    const isSamePiecePosition = (oldPieceList, currentPieceList) => {
-      let continueFlag = true
-      while (continueFlag) {
-        const oldPieceElement = oldPieceList.popCurrentPieceElement()
-        const oldPieceCoords = oldPieceElement.coords
-        const oldPiece = oldPieceElement.piece
+    const isSamePiecePosition = (oldPiecePosition, currentPiecePosition) => {
+      // position histories are reset after a piece is taken, so equality of length between piece positions doesn't need checking
+      for (let i = 0; i < oldPiecePosition.length; i++) {
+        const oldPieceInfo = oldPiecePosition[i]
+        const oldPieceCoords = oldPieceInfo.coords
+        const oldPieceType = oldPieceInfo.type
 
-        const currentPieceElement = currentPieceList.popCurrentPieceElement()
-        const currentPieceCoords = currentPieceElement.coords
-        const currentPiece = currentPieceElement.piece
+        const currentPieceInfo = currentPiecePosition[i]
+        const currentPieceCoords = currentPieceInfo.coords
+        const currentPieceType = currentPieceInfo.type
 
-        // piece lists are sorted by coordinates. If a pair of coordinates are not equal, it means that coordinates that the pieces occupy
-        // are not the same between the two lists
-        if (!this.#isCoordsEqual(oldPieceCoords, currentPieceCoords)) {
-          oldPieceList.reset()
-          currentPieceList.reset()
+        // piecelists are sorted by coordinates, and the piece positions take advantage of that to also be sorted by coordinates
+        // if a pair of coordinates are not equal, it means that the coordinates the pieces occupy are not the same between the lists
+        if ((!this.#isCoordsEqual(oldPieceCoords, currentPieceCoords))
+            || (oldPieceType !== currentPieceType)) {
           return false
-        } else {
-          if (oldPiece.getType() !== currentPiece.getType()) {
-            oldPieceList.reset()
-            currentPieceList.reset()
-            return false
-          }
         }
-
-        // both position histories are reset after pawn movement and taking of pieces. This will mean that the piece lists for a position for
-        // a given color will always have the same length, and thus there is no need to test that the piecelists are of the same length
-        continueFlag = currentPieceList.hasNextPieceElement()
       }
 
-      oldPieceList.reset()
-      currentPieceList.reset()
       return true
     }
 
-    if (!isSamePiecePosition(oldPosition.whitePieceList, currentPosition.whitePieceList)
-        || !isSamePiecePosition(oldPosition.blackPieceList, currentPosition.blackPieceList)) {
+    if (!isSamePiecePosition(oldPiecePosition.whitePiecePosition, currentPiecePosition.whitePiecePosition)
+        || !isSamePiecePosition(oldPiecePosition.blackPiecePosition, currentPiecePosition.blackPiecePosition)) {
       return false
     }
 
     return true
   }
 
-  #addAndComparePositionToPositionHistory() {
-    const color = this.#color
-    const positionHistory = color === 'white' ? this.#whitePositionHistory : this.#blackPositionHistory
-    const currentPosition = this.#getCurrentPosition()
-
-    const opponentPositionHistory = color === 'white' ? this.#blackPositionHistory : this.#whitePositionHistory
-    if (opponentPositionHistory.length > 0) {
-      if (!this.#isSameCastlingRights(opponentPositionHistory[0], currentPosition)) {
-        this.#clearPositionHistory()
+  #addAndComparePositionToPositionHistory(piece, from, to) {
+    // the following should be run only after a move is played
+    if (piece) {
+      if (this.#isPositionWithPossibleEnPassant(piece, to)) {
+        return
       }
+
+      this.#compareAndAdjustCastlingRights(piece, from)
     }
 
+    const positionHistory = this.#color === 'white' ? this.#whitePositionHistory : this.#blackPositionHistory
+    const currentPiecePosition = this.#getCurrentPiecePosition()
+
     let positionHasAppearedBefore = false
-    for (const oldPosition of positionHistory) {
-      if (this.#isSamePosition(oldPosition, currentPosition)) {
+    for (const oldPiecePosition of positionHistory) {
+      if (this.#isSamePosition(oldPiecePosition, currentPiecePosition)) {
         positionHasAppearedBefore = true
-        oldPosition.count += 1
-        if (oldPosition.count === 3) {
+        oldPiecePosition.count += 1
+        if (oldPiecePosition.count === 3) {
           this.#gameStatus = 15
           return
         }
@@ -455,7 +419,57 @@ class ChessGame {
     }
 
     if (!positionHasAppearedBefore) {
-      positionHistory.push(currentPosition)
+      positionHistory.push(currentPiecePosition)
+    }
+  }
+
+  #isPositionWithPossibleEnPassant(piece, to) {
+
+    if (piece.isEnPassantable()) {
+      const potentialEnPassantFromCoords1 = this.#addDiff(to, [0, -1])
+      const potentialEnPassantFromCoords2 = this.#addDiff(to, [0, 1])
+      const potentialEnPassantToCoords = this.#color === 'white' ? this.#addDiff(to, [1, 0]) : this.#addDiff(to, [-1, 0])
+      if (this.#isValidCoords(potentialEnPassantFromCoords1)
+          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords1)
+          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords1, potentialEnPassantToCoords)) {
+        return true
+      } else if (this.#isValidCoords(potentialEnPassantFromCoords2)
+          && this.#playerPawnOccupiesSquare(potentialEnPassantFromCoords2)
+          && this.#playerMovementInformation.isValidMove(potentialEnPassantFromCoords2, potentialEnPassantToCoords)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  #compareAndAdjustCastlingRights(piece, from) {
+    if (piece.getType() === 'rook' && piece.getMoveCount() === 1) {
+      if (this.#isCoordsEqual(from, [0, 0]) && this.#castlingRights.whiteQueenside) {
+        this.#castlingRights.whiteQueenside = false
+        this.#clearPositionHistory()
+      } else if (this.#isCoordsEqual(from, [0, 7]) && this.#castlingRights.whiteKingside) {
+        this.#castlingRights.whiteKingside = false
+        this.#clearPositionHistory()
+      } else if (this.#isCoordsEqual(from, [7, 0]) && this.#castlingRights.blackQueenside) {
+        this.#castlingRights.blackQueenside = false
+        this.#clearPositionHistory()
+      } else if (this.#isCoordsEqual(from, [7, 7]) && this.#castlingRights.blackKingside) {
+        this.#castlingRights.blackKingside = false
+        this.#clearPositionHistory()
+      }
+    }
+
+    if (piece.getType() === 'king' && piece.getMoveCount() === 1) {
+      if (this.#isCoordsEqual(from, [0, 4]) && (this.#castlingRights.whiteQueenside || this.#castlingRights.whiteKingside)) {
+        this.#castlingRights.whiteQueenside = false
+        this.#castlingRights.whiteKingside = false
+        this.#clearPositionHistory()
+      } else if (this.#castlingRights.blackQueenside || this.#castlingRights.blackKingside) {
+        this.#castlingRights.blackQueenside = false
+        this.#castlingRights.blackKingside = false
+        this.#clearPositionHistory()
+      }
     }
   }
 
@@ -671,6 +685,21 @@ class ChessGame {
     this.#playerKingIsInCheck = opponentControlInformation.hasKingInSingleCheck() || opponentControlInformation.hasKingInDoubleCheck()
 
     this.#clearPositionHistory()
+
+    const pieceWithTypeAndColorHasNotMoved = (coords, type, color) => {
+      return (!this.#board.isEmptySquare(coords)
+          && this.#board.getPiece(coords).getMoveCount() === 0
+          && this.#board.getPiece(coords).getType() === type
+          && this.#board.getPiece(coords).getColor() === color)
+    }
+
+    this.#castlingRights = {
+      whiteQueenside: pieceWithTypeAndColorHasNotMoved([0, 4], 'king', 'white') && pieceWithTypeAndColorHasNotMoved([0, 0], 'rook', 'white'),
+      whiteKingside: pieceWithTypeAndColorHasNotMoved([0, 4], 'king', 'white') && pieceWithTypeAndColorHasNotMoved([0, 7], 'rook', 'white'),
+      blackQueenside: pieceWithTypeAndColorHasNotMoved([7, 4], 'king', 'black') && pieceWithTypeAndColorHasNotMoved([7, 0], 'rook', 'black'),
+      blackKingside: pieceWithTypeAndColorHasNotMoved([7, 4], 'king', 'black') && pieceWithTypeAndColorHasNotMoved([7, 7], 'rook', 'black')
+    }
+
     this.#addAndComparePositionToPositionHistory()
   }
 }
