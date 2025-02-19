@@ -480,37 +480,40 @@ class ChessGame {
   }
 
   #bothPlayersHaveInsufficientMaterial() {
-    const playerOnlyHasKingAndMinorPiece = (pieceList) => {
-      if (pieceList.getLength() !== 2) {
+
+    const getPieceTypeArray = (pieceList) => {
+      const pieceTypeArray = []
+      let continueFlag = true
+      while (continueFlag) {
+        const pieceType = pieceList.popCurrentPieceElement().piece.getType()
+        pieceTypeArray.push(pieceType)
+        continueFlag = pieceList.hasNextPieceElement()
+      }
+      return pieceTypeArray
+    }
+
+    const playerOnlyHasKingAndMinorPiece = (pieceTypeArray) => {
+      if (pieceTypeArray.length !== 2) {
         return false
-      } else {
-        let continueFlag = true
-
-        while (continueFlag) {
-          const pieceType = pieceList.popCurrentPieceElement().piece.getType()
+      }
+      else {
+        for (const pieceType of pieceTypeArray) {
           if (pieceType !== 'king' && pieceType !== 'knight' && pieceType !== 'bishop') return false
-
-          continueFlag = pieceList.hasNextPieceElement()
         }
         return true
       }
     }
 
-    const playerOnlyHasKing = (pieceList) => {
-      return pieceList.getLength() === 1
+    const playerOnlyHasKing = (pieceTypeArray) => {
+      return pieceTypeArray.length === 1
     }
 
-    const playerOnlyHasKingAndTwoKnights = (pieceList) => {
-      if (pieceList.getLength() !== 3) {
+    const playerOnlyHasKingAndTwoKnights = (pieceTypeArray) => {
+      if (pieceTypeArray.length !== 3) {
         return false
       } else {
-        let continueFlag = true
-
-        while (continueFlag) {
-          const pieceType = pieceList.popCurrentPieceElement().piece.getType()
+        for (const pieceType of pieceTypeArray) {
           if (pieceType !== 'king' && pieceType !== 'knight') return false
-
-          continueFlag = pieceList.hasNextPieceElement()
         }
         return true
       }
@@ -521,11 +524,16 @@ class ChessGame {
 
     if (whitePieceList.getLength() > 3 || blackPieceList.getLength() > 3) {
       return false
-    } else if ((playerOnlyHasKing(whitePieceList) || playerOnlyHasKingAndMinorPiece(whitePieceList))
-        && (playerOnlyHasKing(blackPieceList) || playerOnlyHasKingAndMinorPiece(blackPieceList))) {
+    }
+
+    const whitePieceTypeArray = getPieceTypeArray(whitePieceList)
+    const blackPieceTypeArray = getPieceTypeArray(blackPieceList)
+
+    if ((playerOnlyHasKing(whitePieceTypeArray) || playerOnlyHasKingAndMinorPiece(whitePieceTypeArray))
+        && (playerOnlyHasKing(blackPieceTypeArray) || playerOnlyHasKingAndMinorPiece(blackPieceTypeArray))) {
       return true
-    } else if ((playerOnlyHasKing(whitePieceList) && playerOnlyHasKingAndTwoKnights(blackPieceList))
-        || (playerOnlyHasKingAndTwoKnights(whitePieceList) && playerOnlyHasKing(blackPieceList))) {
+    } else if ((playerOnlyHasKing(whitePieceTypeArray) && playerOnlyHasKingAndTwoKnights(blackPieceTypeArray))
+        || (playerOnlyHasKingAndTwoKnights(whitePieceTypeArray) && playerOnlyHasKing(blackPieceTypeArray))) {
       return true
     } else {
       return false
