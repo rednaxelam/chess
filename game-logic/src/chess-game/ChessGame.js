@@ -147,12 +147,14 @@ class ChessGame {
         const piece = pieceElement.piece
         const coords = pieceElement.coords
         const type = piece.getType()
+        const color = piece.getColor()
         const pieceId = piece.getId()
         const possibleMoves = isPlayerToMove ? this.#playerMovementInformation.getMoveArrayCopy(coords) : null
 
         pieceInfo[pieceId] = {
           coords,
           type,
+          color,
           possibleMoves
         }
 

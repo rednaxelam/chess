@@ -1,3 +1,5 @@
 const ChessGame = require('./chess-game/ChessGame')
 
-exports.ChessGame = ChessGame
+module.exports = {
+  ChessGame
+}
