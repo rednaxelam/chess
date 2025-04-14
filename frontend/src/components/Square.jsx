@@ -36,9 +36,6 @@ const StyledSquare = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  border-width: 0px 0px 1px 1px;
-  border-color: black;
-  border-style: solid;
 
   & img {
     height: 100%;

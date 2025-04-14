@@ -29,9 +29,6 @@ const getChessBoardState = currentGameState => {
 const StyledBoard = styled.div`
   width: 500px;
   height: 500px;
-  border-width: 1px 1px 0px 0px;
-  border-color: black;
-  border-style: solid;
 
   display: grid;
   grid-template-columns: 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;
@@ -45,14 +42,21 @@ const CurrentLocalBoard = () => {
 
   const squaresToDisplay = []
 
+  const lightBgColor = 'rgb(186,191,100)'
+  const darkBgColor = 'rgb(235, 238, 206)'
+  let currentBgColor = lightBgColor
+  const alternateBgColor = () => currentBgColor = currentBgColor === lightBgColor ? darkBgColor : lightBgColor
+
   for (let i = 7; i >= 0; i--) {
+    alternateBgColor()
     for (let j = 0; j <= 7; j++) {
+      alternateBgColor()
       let square
       if (chessBoardState[i][j]) {
         const { color, type } = chessBoardState[i][j]
-        square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={'white'}/>
+        square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor}/>
       } else {
-        square = <Square key={i * 8 + j} bgColor={'white'}/>
+        square = <Square key={i * 8 + j} bgColor={currentBgColor}/>
       }
       squaresToDisplay.push(square)
     }
