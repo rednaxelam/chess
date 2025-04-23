@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux'
+import { useState } from 'react'
 import Square from './Square'
 import styled from 'styled-components'
 
@@ -35,8 +36,10 @@ const StyledBoard = styled.div`
   grid-template-rows: 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;
 `
 
+
 const CurrentLocalBoard = () => {
   const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
+  const [draggedPieceCoords, setDraggedPieceCoords] = useState(null)
 
   const chessBoardState = getChessBoardState(currentGameState)
 
@@ -46,7 +49,8 @@ const CurrentLocalBoard = () => {
   const darkBgColor = 'rgb(235, 238, 206)'
   let currentBgColor = lightBgColor
   const alternateBgColor = () => currentBgColor = currentBgColor === lightBgColor ? darkBgColor : lightBgColor
-
+  const { playerToMoveColor } = currentGameState
+  console.log('rendering')
   for (let i = 7; i >= 0; i--) {
     alternateBgColor()
     for (let j = 0; j <= 7; j++) {
@@ -54,7 +58,43 @@ const CurrentLocalBoard = () => {
       let square
       if (chessBoardState[i][j]) {
         const { color, type } = chessBoardState[i][j]
-        square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor}/>
+        if (draggedPieceCoords) {
+          if (draggedPieceCoords[0] === i && draggedPieceCoords[1] === j) {
+
+            square = <Square
+              key={i * 8 + j}
+              pieceColor={color}
+              pieceType={type}
+              bgColor={currentBgColor}
+              pieceIsBeingDragged={true}
+            />
+          } else {
+            square = <Square
+              key={i * 8 + j}
+              pieceColor={color}
+              pieceType={type}
+              bgColor={currentBgColor}
+            />
+          }
+        } else {
+          if (color === playerToMoveColor) {
+            square = <Square
+              key={i * 8 + j}
+              pieceColor={color}
+              pieceType={type}
+              bgColor={currentBgColor}
+              handleMouseDown={() => setDraggedPieceCoords([i, j])}
+            />
+          } else {
+            square = <Square
+              key={i * 8 + j}
+              pieceColor={color}
+              pieceType={type}
+              bgColor={currentBgColor}
+            />
+          }
+
+        }
       } else {
         square = <Square key={i * 8 + j} bgColor={currentBgColor}/>
       }
