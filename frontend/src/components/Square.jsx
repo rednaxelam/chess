@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useRef, useState, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { playMove } from '../reducers/localGameReducer'
 
 import blackPawn from '../assets/black-pawn.svg'
 import blackBishop from '../assets/black-bishop.svg'
@@ -45,49 +47,55 @@ const StyledSquare = styled.div`
   }
 `
 
-// const pickUpPiece = (event, imgRef, setImgStyle) => {
-//   event.preventDefault()
-//   const imgDOM = imgRef.current
-//   const imgRect = imgDOM.getBoundingClientRect()
-//   const xval = event.clientX - 0.5 * imgRect.width
-//   const yval = event.clientY - 0.5 * imgRect.height
-//   setImgStyle({ position: 'absolute', left: `${xval - imgRect.x}px`, top: `${yval - imgRect.y}px` })
-//   const callDragPiece = (event) => dragPiece(event, imgRect.x, imgRect.y, imgRect.width, imgRect.height, setImgStyle)
-//   document.addEventListener('mousemove', callDragPiece)
-//   document.addEventListener('mouseup', (event) => {document.removeEventListener('mousemove', callDragPiece)}, { once: true })
-// }
-
 const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
   event.preventDefault()
   const xval = event.clientX - 0.5 * imgWidth
   const yval = event.clientY - 0.5 * imgHeight
-  setImgStyle({ position: 'absolute', left: `${xval - startX}px`, top: `${yval - startY}px`, zIndex: 9999 })
+  setImgStyle({ position: 'absolute', pointerEvents: 'none', left: `${xval - startX}px`, top: `${yval - startY}px`, zIndex: 9999 })
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMouseDown }) => {
-
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMouseDown, moveCoords, setDraggedPieceCoords }) => {
+  const dispatch = useDispatch()
   const imgRef = useRef(null)
-  const [imgStyle, setImgStyle] = useState({ position: 'absolute' })
+  const squareRef = useRef(null)
+  const [imgStyle, setImgStyle] = useState({ position: 'absolute', pointerEvents: 'none' })
 
   useEffect(() => {
     if (pieceIsBeingDragged) {
-      console.log('hello')
       const imgDOM = imgRef.current
       const imgRect = imgDOM.getBoundingClientRect()
       const callDragPiece = (event) => dragPiece(event, imgRect.x, imgRect.y, imgRect.width, imgRect.height, setImgStyle)
-      document.addEventListener('mousemove', callDragPiece)
+      window.onmousemove = callDragPiece
+    } else {
+      setImgStyle({ position: 'absolute', pointerEvents: 'none' })
     }
   }, [pieceIsBeingDragged])
 
+  useEffect(() => {
+    const squareDom = squareRef.current
+    if (moveCoords) {
+      const handleMouseUp = (event) => {
+        window.onmouseup = null
+        window.onmousemove = null
+        event.stopPropagation()
+        setDraggedPieceCoords(null)
+        dispatch(playMove(moveCoords))
+      }
+      squareDom.onmouseup = handleMouseUp
+    } else {
+      squareDom.onmouseup = null
+    }
+  }, [moveCoords])
+
   return (
-    <StyledSquare style={{ backgroundColor: bgColor }}>
+    <StyledSquare style={{ backgroundColor: bgColor }} ref={squareRef} onMouseDown={handleMouseDown}>
       {(pieceType && pieceColor)
         ? <img
           src={getPieceSVGSource(pieceColor, pieceType)} alt={pieceColor + ' ' + pieceType}
           ref={imgRef}
           style={imgStyle}
-          onMouseDown={handleMouseDown}/>
+          draggable={false}/>
         : <></>}
     </StyledSquare>
   )

@@ -1,5 +1,5 @@
-import { useSelector } from 'react-redux'
-import { useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { useState, useEffect } from 'react'
 import Square from './Square'
 import styled from 'styled-components'
 
@@ -30,6 +30,7 @@ const getChessBoardState = currentGameState => {
 const StyledBoard = styled.div`
   width: 500px;
   height: 500px;
+  user-select: none;
 
   display: grid;
   grid-template-columns: 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;
@@ -43,6 +44,16 @@ const CurrentLocalBoard = () => {
 
   const chessBoardState = getChessBoardState(currentGameState)
 
+  const clearDraggedPieceCoords = (event) => setDraggedPieceCoords(null)
+  useEffect(() => {
+    if (draggedPieceCoords) {
+      window.onmouseup = clearDraggedPieceCoords
+    } else {
+      window.onmouseup = null
+      window.onmousemove = null
+    }
+  }, [draggedPieceCoords])
+
   const squaresToDisplay = []
 
   const lightBgColor = 'rgb(186,191,100)'
@@ -50,6 +61,15 @@ const CurrentLocalBoard = () => {
   let currentBgColor = lightBgColor
   const alternateBgColor = () => currentBgColor = currentBgColor === lightBgColor ? darkBgColor : lightBgColor
   const { playerToMoveColor } = currentGameState
+
+  let draggedPieceCanMoveToSquare
+  if (draggedPieceCoords) {
+    draggedPieceCanMoveToSquare = (coords) => {
+      const possibleMoves = chessBoardState[draggedPieceCoords[0]][draggedPieceCoords[1]].possibleMoves
+      return possibleMoves.findIndex(to => coords[0] === to[0] && coords[1] === to[1]) !== -1
+    }
+  }
+
   console.log('rendering')
   for (let i = 7; i >= 0; i--) {
     alternateBgColor()
@@ -60,43 +80,28 @@ const CurrentLocalBoard = () => {
         const { color, type } = chessBoardState[i][j]
         if (draggedPieceCoords) {
           if (draggedPieceCoords[0] === i && draggedPieceCoords[1] === j) {
-
-            square = <Square
-              key={i * 8 + j}
-              pieceColor={color}
-              pieceType={type}
-              bgColor={currentBgColor}
-              pieceIsBeingDragged={true}
-            />
+            square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} pieceIsBeingDragged={true} />
           } else {
-            square = <Square
-              key={i * 8 + j}
-              pieceColor={color}
-              pieceType={type}
-              bgColor={currentBgColor}
-            />
+            if (draggedPieceCanMoveToSquare([i, j])) {
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveCoords={{ from: draggedPieceCoords, to: [i, j] }} setDraggedPieceCoords={setDraggedPieceCoords} />
+            } else {
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} />
+            }
           }
         } else {
           if (color === playerToMoveColor) {
-            square = <Square
-              key={i * 8 + j}
-              pieceColor={color}
-              pieceType={type}
-              bgColor={currentBgColor}
-              handleMouseDown={() => setDraggedPieceCoords([i, j])}
-            />
+            square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} handleMouseDown={() => setDraggedPieceCoords([i, j])} />
           } else {
-            square = <Square
-              key={i * 8 + j}
-              pieceColor={color}
-              pieceType={type}
-              bgColor={currentBgColor}
-            />
+            square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} />
           }
 
         }
       } else {
-        square = <Square key={i * 8 + j} bgColor={currentBgColor}/>
+        if (draggedPieceCoords && draggedPieceCanMoveToSquare([i, j])) {
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} moveCoords={{ from: draggedPieceCoords, to: [i, j] }} setDraggedPieceCoords={setDraggedPieceCoords} />
+        } else {
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+        }
       }
       squaresToDisplay.push(square)
     }
