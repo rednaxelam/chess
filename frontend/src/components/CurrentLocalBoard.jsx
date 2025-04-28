@@ -1,4 +1,4 @@
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
 import Square from './Square'
 import styled from 'styled-components'

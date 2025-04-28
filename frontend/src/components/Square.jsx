@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { useRef, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
@@ -99,13 +98,6 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMou
         : <></>}
     </StyledSquare>
   )
-}
-
-Square.propTypes = {
-  bgColor: PropTypes.string.isRequired,
-  pieceType: PropTypes.string,
-  playerColor: PropTypes.string,
-  pieceIsBeingDragged: PropTypes.bool,
 }
 
 export default Square
