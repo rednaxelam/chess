@@ -35,9 +35,6 @@ const getPieceSVGSource = (pieceColor, pieceType) => pieceSVGDictionary[pieceCol
 
 
 const StyledSquare = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: relative;
 
   & img {
@@ -50,11 +47,11 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
   event.preventDefault()
   const xval = event.clientX - 0.5 * imgWidth
   const yval = event.clientY - 0.5 * imgHeight
-  setImgStyle({ position: 'absolute', pointerEvents: 'none', left: `${xval - startX}px`, top: `${yval - startY}px`, zIndex: 9999 })
+  setImgStyle({ position: 'absolute', pointerEvents: 'none', left: `${xval - startX}px`, top: `${yval - startY}px`, zIndex: 999 })
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMouseDown, moveCoords, setDraggedPieceCoords }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMouseDown, moveInfo, setDraggedPieceInfo }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
@@ -73,19 +70,19 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMou
 
   useEffect(() => {
     const squareDom = squareRef.current
-    if (moveCoords) {
+    if (moveInfo) {
       const handleMouseUp = (event) => {
         window.onmouseup = null
         window.onmousemove = null
         event.stopPropagation()
-        setDraggedPieceCoords(null)
-        dispatch(playMove(moveCoords))
+        setDraggedPieceInfo(null)
+        dispatch(playMove(moveInfo))
       }
       squareDom.onmouseup = handleMouseUp
     } else {
       squareDom.onmouseup = null
     }
-  }, [moveCoords])
+  }, [moveInfo])
 
   return (
     <StyledSquare style={{ backgroundColor: bgColor }} ref={squareRef} onMouseDown={handleMouseDown}>
