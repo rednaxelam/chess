@@ -41,6 +41,7 @@ const StyledBoard = styled.div`
 const CurrentLocalBoard = () => {
   const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
+  const [promotionMenuCoords, setPromotionMenuCoords] = useState(null)
 
   const chessBoardState = getChessBoardState(currentGameState)
 
@@ -80,29 +81,34 @@ const CurrentLocalBoard = () => {
     for (let j = 0; j <= 7; j++) {
       alternateBgColor()
       let square
-      if (chessBoardState[i][j]) {
-        const { color, type } = chessBoardState[i][j]
-        if (draggedPieceCoords) {
+      if (draggedPieceCoords) {
+        if (chessBoardState[i][j]) {
+          const { color, type } = chessBoardState[i][j]
           if (draggedPieceCoords[0] === i && draggedPieceCoords[1] === j) {
             square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} pieceIsBeingDragged={true} />
           } else {
             if (draggedPieceCanMoveToSquare([i, j])) {
-              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], type: draggedPieceType }} setDraggedPieceInfo={setDraggedPieceInfo} />
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType }} setDraggedPieceInfo={setDraggedPieceInfo} />
             } else {
               square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} />
             }
           }
         } else {
+          if (draggedPieceCanMoveToSquare([i, j])) {
+            square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType }} setDraggedPieceInfo={setDraggedPieceInfo} />
+          } else {
+            square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+          }
+        }
+      }
+      else {
+        if (chessBoardState[i][j]) {
+          const { color, type } = chessBoardState[i][j]
           if (color === playerToMoveColor) {
             square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} handleMouseDown={() => setDraggedPieceInfo({ coords: [i, j], type: type })} />
           } else {
             square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} />
           }
-
-        }
-      } else {
-        if (draggedPieceCoords && draggedPieceCanMoveToSquare([i, j])) {
-          square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], type: draggedPieceType }} setDraggedPieceInfo={setDraggedPieceInfo} />
         } else {
           square = <Square key={i * 8 + j} bgColor={currentBgColor} />
         }
