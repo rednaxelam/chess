@@ -1,7 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import styled from 'styled-components'
 import { useRef, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { playMove } from '../reducers/localGameReducer'
+import PromotionDecisionMenu from './PromotionDecisionMenu'
 
 import blackPawn from '../assets/black-pawn.svg'
 import blackBishop from '../assets/black-bishop.svg'
@@ -51,7 +53,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMouseDown, moveInfo, setDraggedPieceInfo }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
@@ -71,14 +73,24 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMou
   useEffect(() => {
     const squareDom = squareRef.current
     if (moveInfo) {
-      const handleMouseUp = (event) => {
-        window.onmouseup = null
-        window.onmousemove = null
-        event.stopPropagation()
-        setDraggedPieceInfo(null)
-        dispatch(playMove(moveInfo))
+      if ((moveInfo.to[0] === 0 || moveInfo.to[0] === 7) && moveInfo.pieceType === 'pawn') {
+        const handleMouseUp = (event) => {
+          window.onmouseup = null
+          window.onmousemove = null
+          event.stopPropagation()
+          setPromotionMenuCoords([moveInfo.to[0], moveInfo.to[1]])
+        }
+        squareDom.onmouseup = handleMouseUp
+      } else {
+        const handleMouseUp = (event) => {
+          window.onmouseup = null
+          window.onmousemove = null
+          event.stopPropagation()
+          setDraggedPieceInfo(null)
+          dispatch(playMove(moveInfo))
+        }
+        squareDom.onmouseup = handleMouseUp
       }
-      squareDom.onmouseup = handleMouseUp
     } else {
       squareDom.onmouseup = null
     }
@@ -86,13 +98,15 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, handleMou
 
   return (
     <StyledSquare style={{ backgroundColor: bgColor }} ref={squareRef} onMouseDown={handleMouseDown}>
-      {(pieceType && pieceColor)
-        ? <img
-          src={getPieceSVGSource(pieceColor, pieceType)} alt={pieceColor + ' ' + pieceType}
-          ref={imgRef}
-          style={imgStyle}
-          draggable={false}/>
-        : <></>}
+      {(displayPromotionMenu)
+        ? <PromotionDecisionMenu pieceColor={moveInfo.pieceColor} boardPosition={moveInfo.pieceColor === 'white' ? 'top' : 'bottom'} moveInfo={moveInfo} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords}/>
+        : (pieceType && pieceColor)
+          ? <img
+            src={getPieceSVGSource(pieceColor, pieceType)} alt={pieceColor + ' ' + pieceType}
+            ref={imgRef}
+            style={imgStyle}
+            draggable={false}/>
+          : <></>}
     </StyledSquare>
   )
 }
