@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="680" height="680" viewBox="0 0 680 680" xml:space="preserve">
+<g transform="matrix(1 0 0 1 340 340)"  >
+<rect style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1; visibility: hidden;" vector-effect="non-scaling-stroke"  x="-340" y="-340" rx="0" ry="0" width="1080" height="1080" />
+</g>
+<g transform="matrix(1 0 0 1 340 340)"  >
+</g>
+<g transform="matrix(9.12 0 0 9.12 340 340)"  >
+<circle style="stroke: rgb(0,0,0); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(70,70,70); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  cx="0" cy="0" r="35" />
+</g>
+<g transform="matrix(1.88 0 0 1.88 340 340)"  >
+<path style="stroke: rgb(0,0,0); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" vector-effect="non-scaling-stroke"  transform=" translate(-113.62, -231.05)" d="M 137.5312 335.1094 L 137.5312 317.9531 Q 146.8125 301.7812 163.125 287.1562 L 172.9688 278.4375 Q 183.7969 268.7344 189.28119999999998 259.7344 Q 194.76559999999998 250.7344 194.76559999999998 242.2969 Q 194.76559999999998 231.8906 189.07029999999997 226.6172 Q 183.37499999999997 221.3438 171.98439999999997 221.3438 Q 158.48439999999997 221.3438 140.62499999999997 231.0469 L 140.62499999999997 214.5938 Q 158.3438 207.14059999999998 176.06249999999997 207.14059999999998 Q 194.3438 207.14059999999998 205.5938 216.63279999999997 Q 216.8438 226.12499999999997 216.8438 241.5938 Q 216.8438 251.4375 210.375 261.7031 Q 203.9062 271.9688 191.1094 282.5156 L 183.65619999999998 288.5625 Q 164.95309999999998 303.8906 161.7188 317.9531 L 216.4219 317.9531 L 216.4219 335.1094 L 137.5312 335.1094 Z M 13.921900000000008 340.3125 L 166.9219 121.78120000000001 L 185.90619999999998 121.78120000000001 L 33.0469 340.3125 L 13.9219 340.3125 Z M 38.25 251.8594 L 38.25 145.125 L 10.406199999999998 152.0156 L 10.406199999999998 135.9844 L 59.0625 123.75 L 59.0625 251.8594 L 38.25 251.8594 Z" stroke-linecap="round" />
+</g>
+</svg>
