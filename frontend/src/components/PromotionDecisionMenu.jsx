@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import styled from 'styled-components'
 import { useRef, useEffect } from 'react'
 import { useDispatch } from 'react-redux'

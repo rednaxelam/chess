@@ -18,6 +18,11 @@ import whiteRook from '../assets/white-rook.svg'
 import whiteQueen from '../assets/white-queen.svg'
 import whiteKing from '../assets/white-king.svg'
 
+import overlayBlackLoss from '../assets/overlay-black-loss.svg'
+import overlayWhiteLoss from '../assets/overlay-white-loss.svg'
+import overlayDraw from '../assets/overlay-draw.svg'
+import overlayWin from '../assets/overlay-win.svg'
+
 const pieceSVGDictionary = {
   'black-pawn': blackPawn,
   'black-bishop': blackBishop,
@@ -39,9 +44,18 @@ const getPieceSVGSource = (pieceColor, pieceType) => pieceSVGDictionary[pieceCol
 const StyledSquare = styled.div`
   position: relative;
 
-  & img {
+  & img.square-contents {
     height: 100%;
     width: 100%;
+  }
+
+  & img.piece-overlay {
+    height: 50%;
+    width: 50%;
+    position: absolute;
+    z-index: 9999;
+    right: -10%;
+    top: -10%
   }
 `
 
@@ -53,7 +67,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
@@ -96,17 +110,57 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
     }
   }, [moveInfo])
 
+  const pieceImgElement = (pieceColor, pieceType, imgRef, imgStyle) => {
+    return <img
+      src={getPieceSVGSource(pieceColor, pieceType)}
+      alt={pieceColor + ' ' + pieceType}
+      ref={imgRef}
+      style={imgStyle}
+      draggable={false}
+      className='square-contents'/>
+  }
+
+  const overlayImg = (colorOfWinner, pieceColor, pieceType) => {
+    const overlayImgElement = (imgSrc) => {
+      return <img
+        src={imgSrc}
+        draggable={false}
+        className='piece-overlay'/>
+    }
+
+    if (!colorOfWinner) return <></>
+    else {
+      if (pieceType === 'king') {
+        if (colorOfWinner === 'na') return overlayImgElement(overlayDraw)
+        else if (colorOfWinner === pieceColor) return overlayImgElement(overlayWin)
+        else if (pieceColor === 'black') return overlayImgElement(overlayBlackLoss)
+        else return overlayImgElement(overlayWhiteLoss)
+      }
+    }
+  }
+
+  let squareContents
+  if (colorOfWinner) {
+    squareContents = <>
+      {pieceImgElement(pieceColor, pieceType, imgRef, imgStyle)}
+      {overlayImg(colorOfWinner, pieceColor, pieceType)}
+    </>
+  } else if (displayPromotionMenu) {
+    squareContents = <PromotionDecisionMenu
+      pieceColor={moveInfo.pieceColor}
+      boardPosition={moveInfo.pieceColor === 'white' ? 'top' : 'bottom'}
+      moveInfo={moveInfo}
+      setDraggedPieceInfo={setDraggedPieceInfo}
+      setPromotionMenuCoords={setPromotionMenuCoords}/>
+  } else if (pieceType && pieceColor) {
+    squareContents = pieceImgElement(pieceColor, pieceType, imgRef, imgStyle)
+  } else {
+    squareContents = <></>
+  }
+
   return (
     <StyledSquare style={{ backgroundColor: bgColor }} ref={squareRef} onMouseDown={handleMouseDown}>
-      {(displayPromotionMenu)
-        ? <PromotionDecisionMenu pieceColor={moveInfo.pieceColor} boardPosition={moveInfo.pieceColor === 'white' ? 'top' : 'bottom'} moveInfo={moveInfo} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords}/>
-        : (pieceType && pieceColor)
-          ? <img
-            src={getPieceSVGSource(pieceColor, pieceType)} alt={pieceColor + ' ' + pieceType}
-            ref={imgRef}
-            style={imgStyle}
-            draggable={false}/>
-          : <></>}
+      {squareContents}
     </StyledSquare>
   )
 }
