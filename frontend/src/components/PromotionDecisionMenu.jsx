@@ -31,17 +31,17 @@ const MenuContainer = styled.div`
   left: -2px;
   width: 100%;
   background-color: rgb(214, 214, 180);
-  border: 2px solid black;
+  border: 1.5px solid black;
   border-radius: 5px;
   display: flex;
   flex-wrap: wrap;
   z-index: 9999;
 
   & img {
-    transition: transform .2s;
+    width: 100%;
 
     &:hover {
-      transform: scale(1.1);
+      background-color: rgb(164, 164, 132);
     }
   }
 
