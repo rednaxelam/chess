@@ -131,19 +131,19 @@ const CurrentLocalBoard = () => {
         if (chessBoardState[i][j]) {
           const { color, type } = chessBoardState[i][j]
           if (draggedPieceCoords[0] === i && draggedPieceCoords[1] === j) {
-            square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} pieceIsBeingDragged={true} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
+            square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} pieceIsBeingDragged={true} colorOfPlayerInCheck={colorOfPlayerInCheck} highlightOnHover={true} />
           } else {
             if (draggedPieceCanMoveToSquare([i, j])) {
-              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} />
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} />
             } else {
-              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck} />
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck} highlightOnHover={true} />
             }
           }
         } else {
           if (draggedPieceCanMoveToSquare([i, j])) {
-            square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} />
+            square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} />
           } else {
-            square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+            square = <Square key={i * 8 + j} bgColor={currentBgColor} highlightOnHover={true} />
           }
         }
       } else {

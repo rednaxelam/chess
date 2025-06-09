@@ -57,6 +57,18 @@ const StyledSquare = styled.div`
     right: -10%;
     top: -10%
   }
+
+  & div.hover-border {
+    height: 100%;
+    width: 100%;
+    z-index: 900;
+    position: absolute;
+    box-sizing: border-box;
+  }
+
+  & div.hover-border:hover {
+    border: 3px solid rgba(104, 104, 62, 0.527);
+  }
 `
 
 const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
@@ -67,7 +79,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
@@ -156,9 +168,14 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
       setDraggedPieceInfo={setDraggedPieceInfo}
       setPromotionMenuCoords={setPromotionMenuCoords}/>
   } else if (pieceType && pieceColor) {
-    squareContents = pieceImgElement(pieceColor, pieceType, imgRef, imgStyle)
+    squareContents = <>
+      {pieceImgElement(pieceColor, pieceType, imgRef, imgStyle)}
+      {highlightOnHover ? <div className='hover-border'></div> : <></>}
+    </>
   } else {
-    squareContents = <></>
+    squareContents = <>
+      {highlightOnHover ? <div className='hover-border'></div> : <></>}
+    </>
   }
 
   return (
