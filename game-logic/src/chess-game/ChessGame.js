@@ -173,6 +173,7 @@ class ChessGame {
       playerToMoveIsInCheck: this.#playerKingIsInCheck,
       whitePieceInfo: getPieceInfo(whitePieceList, this.#color === 'white'),
       blackPieceInfo: getPieceInfo(blackPieceList, this.#color === 'black'),
+      moveHistory: this.#moveHistory.reduce((historyCopy, move) => {historyCopy.push(move); return historyCopy}, []),
     }
 
     return currentGameStateRepresentation

@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Square from './Square'
 import styled from 'styled-components'
 
@@ -25,6 +25,23 @@ const getChessBoardState = currentGameState => {
   }
 
   return chessBoardState
+}
+
+const getPreviousMoveCoords = currentGameState => {
+  const { moveHistory } = currentGameState
+  if (moveHistory.length === 0) return [[-1, -1], [-1, -1]]
+  else return moveHistory[moveHistory.length - 1]
+}
+
+const isCoordsEqual = (coords1, coords2) => {
+  return coords1[0] === coords2[0] && coords1[1] === coords2[1]
+}
+
+const bgColors = {
+  lightBgColor: 'rgb(186,191,100)',
+  lightBgColorPreviousMove: 'rgb(155, 156, 128)',
+  darkBgColor: 'rgb(235, 238, 206)',
+  darkBgColorPreviousMove: 'rgb(215, 203, 203)',
 }
 
 const StyledBoard = styled.div`
@@ -58,10 +75,17 @@ const CurrentLocalBoard = () => {
 
   const squaresToDisplay = []
 
-  const lightBgColor = 'rgb(186,191,100)'
-  const darkBgColor = 'rgb(235, 238, 206)'
+  const { lightBgColor, lightBgColorPreviousMove, darkBgColor, darkBgColorPreviousMove } = bgColors
   let currentBgColor = lightBgColor
-  const alternateBgColor = () => currentBgColor = currentBgColor === lightBgColor ? darkBgColor : lightBgColor
+  const alternateBgColor = () => {
+    if (currentBgColor === lightBgColor || currentBgColor === lightBgColorPreviousMove) currentBgColor = darkBgColor
+    else currentBgColor = lightBgColor
+  }
+  const alternateBgColorPreviousMove = () => {
+    if (currentBgColor === lightBgColor) currentBgColor = lightBgColorPreviousMove
+    else currentBgColor = darkBgColorPreviousMove
+  }
+  const [previousMoveFromCoords, previousMoveToCoords] = getPreviousMoveCoords(currentGameState)
 
   let draggedPieceCanMoveToSquare
   let draggedPieceCoords
@@ -80,6 +104,9 @@ const CurrentLocalBoard = () => {
     alternateBgColor()
     for (let j = 0; j <= 7; j++) {
       alternateBgColor()
+      if (isCoordsEqual([i, j], previousMoveFromCoords) || isCoordsEqual([i, j], previousMoveToCoords)) {
+        alternateBgColorPreviousMove()
+      }
       let square
       if (gameStatus >= 4) {
         const colorOfWinner = gameStatus >= 12 ? 'na' : gameStatus % 2 === 0 ? 'white' : 'black'
