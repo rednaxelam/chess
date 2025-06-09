@@ -67,11 +67,14 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
   const [imgStyle, setImgStyle] = useState({ position: 'absolute', pointerEvents: 'none' })
+  if (colorOfPlayerInCheck && colorOfPlayerInCheck === pieceColor && pieceType === 'king') {
+    bgColor = bgColor === 'rgb(186,191,100)' ? 'rgb(209, 60, 60)' : 'rgb(248, 126, 126)'
+  }
 
   useEffect(() => {
     if (pieceIsBeingDragged) {
