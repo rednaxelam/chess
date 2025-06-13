@@ -79,7 +79,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, orientation, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover }) => {
   const dispatch = useDispatch()
   const imgRef = useRef(null)
   const squareRef = useRef(null)
@@ -163,7 +163,9 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
   } else if (displayPromotionMenu) {
     squareContents = <PromotionDecisionMenu
       pieceColor={moveInfo.pieceColor}
-      boardPosition={moveInfo.pieceColor === 'white' ? 'top' : 'bottom'}
+      boardPosition={orientation === 'white'
+        ? moveInfo.pieceColor === 'white' ? 'top' : 'bottom'
+        : moveInfo.pieceColor === 'white' ? 'bottom' : 'top'}
       moveInfo={moveInfo}
       setDraggedPieceInfo={setDraggedPieceInfo}
       setPromotionMenuCoords={setPromotionMenuCoords}/>

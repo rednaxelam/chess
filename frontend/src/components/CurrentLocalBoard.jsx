@@ -55,7 +55,7 @@ const StyledBoard = styled.div`
 `
 
 
-const CurrentLocalBoard = () => {
+const CurrentLocalBoard = ({ orientation }) => {
   const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
   const { gameStatus, playerToMoveColor, playerToMoveIsInCheck } = currentGameState
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
@@ -76,7 +76,7 @@ const CurrentLocalBoard = () => {
   const squaresToDisplay = []
 
   const { lightBgColor, lightBgColorPreviousMove, darkBgColor, darkBgColorPreviousMove } = bgColors
-  let currentBgColor = lightBgColor
+  let currentBgColor = darkBgColor
   const alternateBgColor = () => {
     if (currentBgColor === lightBgColor || currentBgColor === lightBgColorPreviousMove) currentBgColor = darkBgColor
     else currentBgColor = lightBgColor
@@ -103,9 +103,9 @@ const CurrentLocalBoard = () => {
   const colorOfPlayerInCheck = playerToMoveIsInCheck ? playerToMoveColor : 'na'
 
   console.log('rendering')
-  for (let i = 7; i >= 0; i--) {
+  for (let i = orientation === 'white' ? 7 : 0; orientation === 'white' ? i >= 0 : i <= 7; orientation === 'white' ? i-- : i++) {
     alternateBgColor()
-    for (let j = 0; j <= 7; j++) {
+    for (let j = orientation === 'white' ? 0 : 7; orientation === 'white' ? j <= 7 : j >= 0; orientation === 'white' ? j++ : j--) {
       alternateBgColor()
       if (isCoordsEqual([i, j], previousMoveFromCoords) || isCoordsEqual([i, j], previousMoveToCoords)) {
         alternateBgColorPreviousMove()
@@ -120,7 +120,7 @@ const CurrentLocalBoard = () => {
         }
       } else if (promotionMenuCoords) {
         if (promotionMenuCoords[0] === i && promotionMenuCoords[1] === j) {
-          square = <Square key={i * 8 + j} bgColor={currentBgColor} displayPromotionMenu={true} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} />
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} displayPromotionMenu={true} orientation={orientation} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} />
         } else if (chessBoardState[i][j] && !(draggedPieceCoords[0] === i && draggedPieceCoords[1] === j)) {
           const { color, type } = chessBoardState[i][j]
           square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck}/>

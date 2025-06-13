@@ -4,7 +4,7 @@ function App() {
 
   return (
     <>
-      <CurrentLocalBoard />
+      <CurrentLocalBoard orientation={'white'}/>
     </>
   )
 }
