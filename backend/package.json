@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development node --watch-path ./ index.js",
+    "lint": "eslint ."
+  },
+  "author": "Michael Alexander",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@stylistic/eslint-plugin": "^4.4.1",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0"
+  }
+}
