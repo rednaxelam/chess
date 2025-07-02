@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const logger = require('./logger')
 
 const userIdExtractor = (req, res, next) => {
   const isHandshake = req._query.sid === undefined
@@ -29,6 +30,16 @@ const userIdExtractor = (req, res, next) => {
   next()
 }
 
+const incomingMessageLogger = (socket) => ([event, ...args], next) => {
+  logger.info('---Incoming WS Message---')
+  logger.info('User Id:', socket.request.userId)
+  logger.info('Event Name:', event)
+  logger.info('Message:', args.join(',\n '))
+  logger.info('---')
+  next()
+}
+
 module.exports = {
-  userIdExtractor
+  userIdExtractor,
+  incomingMessageLogger,
 }

@@ -1,6 +1,7 @@
 const express = require('express')
 const { createServer } = require('http')
 const { Server } = require('socket.io')
+const logger = require('./utils/logger')
 
 const guestUsersRouter = require('./controllers/guest-users')
 const cors = require('cors')
@@ -24,12 +25,19 @@ app.use(middleware.errorHandler)
 io.engine.use(wsMiddleware.userIdExtractor)
 
 io.on('connection', (socket) => {
-  console.log('a user connected')
-  console.log(socket.request.userId)
+
+  const userId = socket.request.userId
+  socket.join(`user:${userId}`)
+
+  socket.use(wsMiddleware.incomingMessageLogger(socket))
+
+  logger.info(`user ${userId} connected`)
+
   socket.on('disconnect', () => {
-    console.log('user disconnected')
+    logger.info(`user ${userId} disconnected`)
   })
 
 })
+
 
 module.exports = server
