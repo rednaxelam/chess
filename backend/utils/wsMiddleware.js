@@ -19,7 +19,13 @@ const userIdExtractor = (req, res, next) => {
 
   const token = authorization.replace('Bearer ', '')
 
-  const decodedToken = jwt.verify(token, process.env.SECRET)
+  let decodedToken
+  try {
+    decodedToken = jwt.verify(token, process.env.SECRET)
+  } catch (error) {
+    return next(error)
+  }
+  
 
   if (!decodedToken.id) {
     return next(new Error('invalid token'))
