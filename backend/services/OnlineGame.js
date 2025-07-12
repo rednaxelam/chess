@@ -178,6 +178,19 @@ class OnlineGame {
     return currentGameStateRepresentation
   }
 
+  getCurrentDrawAgreementState() {
+    return {
+      white: {
+        offersDraw: this.#drawAgreementArray[0],
+        wantsDrawOffers: this.#wantsDrawOffers[0],
+      },
+      black: {
+        offersDraw: this.#drawAgreementArray[1],
+        wantsDrawOffers: this.#wantsDrawOffers[1],
+      },
+    }
+  }
+
   gameStateHasChanged() {
     return this.#gameStateHasChanged
   }
