@@ -139,6 +139,34 @@ class OnlineGame {
     this.#gameStateHasNotChangedReasonCode = null
   }
 
+  playerAbandons(playerId) {
+    if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    const playerColor = this.#getPlayerColor(playerId)
+
+    if (playerColor === 'white') {
+      this.#chessGame.whiteAbandonsGame()
+    } else {
+      this.#chessGame.blackAbandonsGame()
+    }
+
+    this.#gameStateHasChanged = true
+    this.#gameStateHasNotChangedReasonCode = null
+  }
+
+  playerTimeout(playerId) {
+    if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    const playerColor = this.#getPlayerColor(playerId)
+
+    if (playerColor === 'white') {
+      this.#chessGame.whiteTimeout()
+    } else {
+      this.#chessGame.blackTimeout()
+    }
+
+    this.#gameStateHasChanged = true
+    this.#gameStateHasNotChangedReasonCode = null
+  }
+
   // methods to get state representing the status of the game
 
   getCurrentGameState(playerId) {

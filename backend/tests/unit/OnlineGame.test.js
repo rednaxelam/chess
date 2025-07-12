@@ -191,6 +191,30 @@ describe('OnlineGame Testing', () => {
       expect(onlineGame.getCurrentGameState(whitePlayerId).gameStatus).toBe(6)
       expect(onlineGame.getCurrentGameState(blackPlayerId).gameStatus).toBe(6)
     })
+
+    test('After a player abandons the game, the game can be ended appropriately', () => {
+      const { onlineGame, whitePlayerId, blackPlayerId } = onlineGameSetupContainer
+
+      onlineGame.playMove(whitePlayerId, {from: [1, 4], to: [3, 4]}, 0)
+      onlineGame.playMove(blackPlayerId, {from: [6, 6], to: [4, 6]}, 1)
+      onlineGame.playMove(whitePlayerId, {from: [0, 1], to: [2, 2]}, 2)
+      onlineGame.playMove(blackPlayerId, {from: [6, 5], to: [4, 5]}, 3)
+
+      onlineGame.playerAbandons(blackPlayerId)
+      expect(onlineGame.gameStateHasChanged()).toBe(true)
+      expect(onlineGame.getCurrentGameState(whitePlayerId).gameStatus).toBe(10)
+      expect(onlineGame.getCurrentGameState(blackPlayerId).gameStatus).toBe(10)
+    })
+
+    test('When a player runs out of time, the game can be ended appropriately', () => {
+      const { onlineGame, whitePlayerId, blackPlayerId } = onlineGameSetupContainer
+
+      // white is very indecisive today
+      onlineGame.playerTimeout(whitePlayerId)
+      expect(onlineGame.gameStateHasChanged()).toBe(true)
+      expect(onlineGame.getCurrentGameState(whitePlayerId).gameStatus).toBe(9)
+      expect(onlineGame.getCurrentGameState(blackPlayerId).gameStatus).toBe(9)
+    })
     
   })
 
