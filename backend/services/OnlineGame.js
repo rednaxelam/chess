@@ -223,6 +223,13 @@ class OnlineGame {
     return this.#gameId
   }
 
+  getUsers() {
+    return {
+      white: this.#whitePlayerId,
+      black: this.#blackPlayerId,
+    }
+  }
+
   isUserPartOfGame(playerId) {
     return playerId === this.#whitePlayerId || playerId === this.#blackPlayerId
   }

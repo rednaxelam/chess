@@ -103,6 +103,20 @@ class OnlineUsers {
     }
   }
 
+  // it is assumed that only valid onlineGames (those attached to users and interacted with appropriately) will 
+  // be used for the onlineGame argument
+  chessGameHasConcluded(onlineGame) {
+    if (onlineGame.isActiveGame()) {
+      return this.#failure(7, 'Chess game is still in progress')
+    } else {
+      const usersInGame = onlineGame.getUsers()
+      // the following assumes that users will not be removed from OnlineUsers while the game is active
+      this.#getOnlineUser(usersInGame.white).onlineGameStatus = 0
+      this.#getOnlineUser(usersInGame.black).onlineGameStatus = 0
+      return this.#success(null)
+    }
+  }
+
   getOnlineGameStatus(userId) {
     // onlineGameStatus code guide:
     // 0 - user is not in matchmaking queue or live online game
@@ -155,6 +169,7 @@ class OnlineUsers {
   // 4 - user has no online game associated with them
   // 5 - user does not currently have a socket io connection with the server
   // 6 - user id not found
+  // 7 - game still in progress
 
   #userIdNotFound(userId) {
     return {
