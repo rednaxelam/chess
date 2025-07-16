@@ -6,11 +6,17 @@ const logger = require('./utils/logger')
 const guestUsersRouter = require('./controllers/guest-users')
 const cors = require('cors')
 const middleware = require('./utils/middleware')
-const wsMiddleware = require('./utils/wsMiddleware')
 
 const app = express()
 const server = createServer(app)
 const io = new Server(server)
+
+const { OnlineUsers } = require('./services/OnlineUsers')
+const onlineUsers = new OnlineUsers()
+
+const wsMiddleware = require('./utils/wsMiddleware')
+
+const { registerMatchmakingQueueHandlers } = require('./handlers/matchmakingQueueHandlers')
 
 app.use(cors())
 app.use(express.json())
@@ -28,13 +34,17 @@ io.on('connection', (socket) => {
 
   const userId = socket.request.userId
   socket.join(`user:${userId}`)
+  onlineUsers.addUserConnection(userId, socket.id)
 
   socket.use(wsMiddleware.incomingMessageLogger(socket))
+
+  registerMatchmakingQueueHandlers(io, socket, onlineUsers)
 
   logger.info(`user ${userId} connected`)
 
   socket.on('disconnect', () => {
     logger.info(`user ${userId} disconnected`)
+    onlineUsers.removeUserConnection(userId, socket.id)
   })
 
 })
