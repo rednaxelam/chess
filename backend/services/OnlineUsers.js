@@ -58,11 +58,11 @@ class OnlineUsers {
 
     const user = this.#getOnlineUser(userId)
     if (user.sockets.size === 0) {
-      return this.#failure(5, 'user does not have an active socket io connection')
+      return this.#failure(5, 'no have an active socket io connection')
     } else if (user.onlineGameStatus === 2) {
-      return this.#failure(2, 'user already in game')
+      return this.#failure(2, 'already in game')
     } else if (user.onlineGameStatus === 1) {
-      return this.#failure(1, 'user already in matchmaking queue')
+      return this.#failure(1, 'already in matchmaking queue')
     } else {
       this.#matchmakingQueue.push(userId)
       user.onlineGameStatus = 1
@@ -87,9 +87,9 @@ class OnlineUsers {
 
     const user = this.#getOnlineUser(userId)
     if (user.onlineGameStatus === 2) {
-      return this.#failure(2)
+      return this.#failure(2, 'already in game')
     } else if (user.onlineGameStatus === 0) {
-      return this.#failure(3)
+      return this.#failure(3, 'not in game or matchmaking queue')
     } else {
       if (this.#matchmakingQueue.length !== 1) {
         throw new Error('user in matchmaking queue tried to leave matchmaking queue that was not of length 1')
@@ -147,7 +147,7 @@ class OnlineUsers {
 
     const user = this.#getOnlineUser(userId)
     if (!user.onlineGame) {
-      return this.#failure(4, 'no online game associated with user')
+      return this.#failure(4, 'no online game found')
     } else {
       return this.#success(user.onlineGame)
     }
@@ -175,7 +175,7 @@ class OnlineUsers {
     return {
       statusCode: 6,
       data: null,
-      errMsg: `user with id ${userId} not found`,
+      errMsg: `no user with id ${userId}`,
     }
   }
 
