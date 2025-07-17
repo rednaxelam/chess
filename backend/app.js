@@ -16,6 +16,7 @@ const onlineUsers = new OnlineUsers()
 
 const wsMiddleware = require('./utils/wsMiddleware')
 
+const { registerUserHandlers } = require('./handlers/userHandlers')
 const { registerMatchmakingQueueHandlers } = require('./handlers/matchmakingQueueHandlers')
 const { registerOnlineGameHandlers } = require('./handlers/onlineGameHandlers')
 
@@ -39,6 +40,7 @@ io.on('connection', (socket) => {
 
   socket.use(wsMiddleware.incomingMessageLogger(socket))
 
+  registerUserHandlers(io, socket, onlineUsers)
   registerMatchmakingQueueHandlers(io, socket, onlineUsers)
   registerOnlineGameHandlers(io, socket, onlineUsers)
 

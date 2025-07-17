@@ -135,7 +135,6 @@ class OnlineUsers {
     const userRepresentation = {
       onlineGameStatus: user.onlineGameStatus,
       hasOnlineGame: user.onlineGame ? true : false,
-      sockets: new Set(user.sockets),
       username: user.username,
     }
 
