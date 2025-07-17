@@ -178,15 +178,18 @@ class OnlineGame {
     return currentGameStateRepresentation
   }
 
-  getCurrentDrawAgreementState() {
+  getCurrentDrawAgreementState(playerId) {
+    const playerIndex = playerId === this.#whitePlayerId ? 0 : 1
+    const opponentIndex = playerIndex === 0 ? 1 : 0
+
     return {
-      white: {
-        offersDraw: this.#drawAgreementArray[0],
-        wantsDrawOffers: this.#wantsDrawOffers[0],
+      player: {
+        offersDraw: this.#drawAgreementArray[playerIndex],
+        wantsDrawOffers: this.#wantsDrawOffers[playerIndex],
       },
-      black: {
-        offersDraw: this.#drawAgreementArray[1],
-        wantsDrawOffers: this.#wantsDrawOffers[1],
+      opponent: {
+        offersDraw: this.#drawAgreementArray[opponentIndex],
+        wantsDrawOffers: this.#wantsDrawOffers[opponentIndex],
       },
     }
   }
