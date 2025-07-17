@@ -17,6 +17,7 @@ const onlineUsers = new OnlineUsers()
 const wsMiddleware = require('./utils/wsMiddleware')
 
 const { registerMatchmakingQueueHandlers } = require('./handlers/matchmakingQueueHandlers')
+const { registerOnlineGameHandlers } = require('./handlers/onlineGameHandlers')
 
 app.use(cors())
 app.use(express.json())
@@ -39,6 +40,7 @@ io.on('connection', (socket) => {
   socket.use(wsMiddleware.incomingMessageLogger(socket))
 
   registerMatchmakingQueueHandlers(io, socket, onlineUsers)
+  registerOnlineGameHandlers(io, socket, onlineUsers)
 
   logger.info(`user ${userId} connected`)
 
