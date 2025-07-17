@@ -9,10 +9,16 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
       if (result.data.length === 0) {
         io.to(`user:${userId}`).emit('queue:joined')
       } else {
-        io.to(`user:${userId}`).emit('game:joined')
+        const onlineGame = onlineUsers.getOnlineGame(userId).data
+        const usersInGame = onlineGame.getUsers()
+
+        const gameState = onlineGame.getCurrentGameState(userId)
+        const drawState = onlineGame.getCurrentDrawAgreementState()
+        io.to(`user:${usersInGame.white}`).emit('game:joined', { gameState, drawState })
+        io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState, drawState })
       }
     } else {
-      io.to(`user:${userId}`).emit('queue:failure', {statusCode: result.statusCode, errMsg: result.errMsg})
+      io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})
     }
   }
 
@@ -24,7 +30,7 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
     if (result.statusCode === 0) {
       io.to(`user:${userId}`).emit('queue:left')
     } else {
-      io.to(`user:${userId}`).emit('queue:failure', {statusCode: result.statusCode, errMsg: result.errMsg})
+      io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})
     }
   }
 
