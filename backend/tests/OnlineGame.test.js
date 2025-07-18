@@ -1,4 +1,4 @@
-const { OnlineGame } = require('./../../services/OnlineGame')
+const { OnlineGame } = require('../services/OnlineGame')
 const { v7: uuidv7 } = require('uuid')
 
 let onlineGameSetupContainer

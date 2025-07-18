@@ -1,4 +1,4 @@
-const { OnlineUsers } = require('../../services/OnlineUsers')
+const { OnlineUsers } = require('../services/OnlineUsers')
 
 const user1Id = 'user1Id'
 const user2Id = 'user2Id'
@@ -28,8 +28,8 @@ describe('OnlineUsers Testing', () => {
     expect(onlineUsers.getOnlineUserState(user1Id).data.onlineGameStatus).toBe(0)
     expect(onlineUsers.getOnlineUserState(user2Id).data.onlineGameStatus).toBe(0)
     
-    expect(onlineUsers.getOnlineUserState(user1Id).data.sockets.size).toBe(3)
-    expect(onlineUsers.getOnlineUserState(user2Id).data.sockets.size).toBe(1)
+    expect(onlineUsers.getOnlineUserState(user1Id).data.numConnections).toBe(3)
+    expect(onlineUsers.getOnlineUserState(user2Id).data.numConnections).toBe(1)
     
     expect((typeof onlineUsers.getOnlineUserState(user1Id).data.username) === 'string').toBe(true)
     expect((typeof onlineUsers.getOnlineUserState(user2Id).data.username) === 'string').toBe(true)
@@ -47,10 +47,10 @@ describe('OnlineUsers Testing', () => {
 
     test('User connections can be removed after they disconnect', () => {
       expect(onlineUsers.removeUserConnection(...user1Idsocket2).statusCode).toBe(0)
-      expect(onlineUsers.getOnlineUserState(user1Id).data.sockets.size).toBe(2)
+      expect(onlineUsers.getOnlineUserState(user1Id).data.numConnections).toBe(2)
 
       expect(onlineUsers.removeUserConnection(...user2Idsocket1).statusCode).toBe(0)
-      expect(onlineUsers.getOnlineUserState(user2Id).data.sockets.size).toBe(0)
+      expect(onlineUsers.getOnlineUserState(user2Id).data.numConnections).toBe(0)
     })
 
     describe('...who are performing matchmaking operations', () => {

@@ -135,6 +135,7 @@ class OnlineUsers {
     const userRepresentation = {
       onlineGameStatus: user.onlineGameStatus,
       hasOnlineGame: user.onlineGame ? true : false,
+      numConnections: user.sockets.size,
       username: user.username,
     }
 
