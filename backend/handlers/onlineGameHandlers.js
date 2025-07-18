@@ -47,6 +47,7 @@ const handleDrawOperation = (io, socket, onlineUsers, operationName) => {
 
   if (onlineGame.gameStateHasChanged()) {
     emitGameStateUpdate(io, onlineGame)
+    onlineUsers.chessGameHasConcluded(onlineGame)
     return
   }
 
@@ -69,6 +70,7 @@ const handleGameTermination = (io, socket, onlineUsers, operationName) => {
     io.to(`user:${userId}`).emit('game:finished')
   } else {
     emitGameStateUpdate(io, onlineGame)
+    onlineUsers.chessGameHasConcluded(onlineGame)
   }
 
 }
@@ -91,6 +93,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
       }
     } else {
       emitGameStateUpdate(io, onlineGame)
+      if (!onlineGame.isActiveGame()) onlineUsers.chessGameHasConcluded(onlineGame)
     }
   }
 
