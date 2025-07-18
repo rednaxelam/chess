@@ -12,10 +12,16 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
         const onlineGame = onlineUsers.getOnlineGame(userId).data
         const usersInGame = onlineGame.getUsers()
 
-        const gameState = onlineGame.getCurrentGameState(userId)
+        const whiteUserState = { username: onlineUsers.getOnlineUserState(usersInGame.white).data.username }
+        const blackUserState = { username: onlineUsers.getOnlineUserState(usersInGame.black).data.username }
+
+        const whiteGameState = onlineGame.getCurrentGameState(usersInGame.white)
+        const blackGameState = onlineGame.getCurrentGameState(usersInGame.black)
         const drawState = onlineGame.getCurrentDrawAgreementState()
-        io.to(`user:${usersInGame.white}`).emit('game:joined', { gameState, drawState })
-        io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState, drawState })
+        const userState = { white: whiteUserState, black: blackUserState}
+        
+        io.to(`user:${usersInGame.white}`).emit('game:joined', { gameState: whiteGameState, drawState, userState })
+        io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState: blackGameState, drawState, userState })
       }
     } else {
       io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})

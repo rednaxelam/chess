@@ -110,10 +110,16 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     const onlineGame = getOnlineGame(io, userId, onlineUsers)
     if (!onlineGame) return
 
-    const gameState = onlineGame.getCurrentGameState(userId)
-    const drawState = onlineGame.getCurrentDrawAgreementState(userId)
+    const usersInGame = onlineGame.getUsers()
+    // the following assumes that users won't be removed from OnlineUsers during the course of the game
+    const whiteUserState = { username: onlineGame.getOnlineUserState(usersInGame.white).data.username }
+    const blackUserState = { username: onlineGame.getOnlineUserState(usersInGame.black).data.username }
 
-    io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState })
+    const gameState = onlineUsers.getCurrentGameState(userId)
+    const drawState = onlineUsers.getCurrentDrawAgreementState(userId)
+    const userState = { white: whiteUserState, black: blackUserState}
+
+    io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState, userState })
   }
 
   socket.on('game:play-move', playMove)
@@ -124,7 +130,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   socket.on('game:resign', resign)
   socket.on('game:recover-state', recoverOnlineGameState)
 
-  // possible responses:
+  // possible emitted events:
   // game:game-state-update
   // game:draw-state-update
   // game:current-state
