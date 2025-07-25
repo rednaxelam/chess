@@ -54,4 +54,4 @@ io.on('connection', (socket) => {
 })
 
 
-module.exports = server
+module.exports = { server, io }
