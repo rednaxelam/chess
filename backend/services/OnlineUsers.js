@@ -58,7 +58,7 @@ class OnlineUsers {
 
     const user = this.#getOnlineUser(userId)
     if (user.sockets.size === 0) {
-      return this.#failure(5, 'no have an active socket io connection')
+      return this.#failure(5, 'no active socket io connection')
     } else if (user.onlineGameStatus === 2) {
       return this.#failure(2, 'already in game')
     } else if (user.onlineGameStatus === 1) {
