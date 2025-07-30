@@ -89,7 +89,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
       if (!onlineGame.isActiveGame()) {
         io.to(`user:${userId}`).emit('game:finished')
       } else {
-        io.to(`user:${userId}`).emit('game:move-failure', {gameErrCode: onlineGame.getGameStateHasNotChangedReasonCode()})
+        io.to(`user:${userId}`).emit('game:move-failure', { gameErrCode: onlineGame.getGameStateHasNotChangedReasonCode() })
       }
     } else {
       emitGameStateUpdate(io, onlineGame)
@@ -115,11 +115,11 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
 
     const usersInGame = onlineGame.getUsers()
     // the following assumes that users won't be removed from OnlineUsers during the course of the game
-    const whiteUserState = { username: onlineGame.getOnlineUserState(usersInGame.white).data.username }
-    const blackUserState = { username: onlineGame.getOnlineUserState(usersInGame.black).data.username }
+    const whiteUserState = { username: onlineUsers.getOnlineUserState(usersInGame.white).data.username }
+    const blackUserState = { username: onlineUsers.getOnlineUserState(usersInGame.black).data.username }
 
-    const gameState = onlineUsers.getCurrentGameState(userId)
-    const drawState = onlineUsers.getCurrentDrawAgreementState(userId)
+    const gameState = onlineGame.getCurrentGameState(userId)
+    const drawState = onlineGame.getCurrentDrawAgreementState()
     const userState = { white: whiteUserState, black: blackUserState}
 
     io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState, userState })
