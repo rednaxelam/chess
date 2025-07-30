@@ -33,8 +33,8 @@ class ChessGame {
       return
     }
 
-    if (!this.#isValidCoords(from)
-        || !this.#isValidCoords(to)
+    if (!this.#isValidCoordsArg(from)
+        || !this.#isValidCoordsArg(to)
         || this.#isCoordsEqual(from, to)
         || this.#board.isEmptySquare(from)
         || this.#board.getPiece(from).getColor() !== this.#color
@@ -308,6 +308,20 @@ class ChessGame {
 
   #isCoordsEqual(coords1, coords2) {
     return coords1[0] === coords2[0] && coords1[1] === coords2[1]
+  }
+
+  #isValidCoordsArg(coords) {
+    if (!Array.isArray(coords)) {
+      return false
+    } else if (coords.length !== 2) {
+      return false
+    } else if (!Number.isInteger(coords[0]) || !Number.isInteger(coords[1])) {
+      return false
+    } else if (coords[0] < 0 || coords[0] > 7 || coords[1] < 0 || coords[1] > 7) {
+      return false
+    } else {
+      return true
+    }
   }
 
   #isValidCoords(coords) {
