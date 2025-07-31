@@ -28,7 +28,7 @@ class OnlineGame {
 
   // methods to interact with active game
 
-  playMove(playerId, move, moveCount) {
+  playMove(playerId, moveInfo, moveCount) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
     const playerColor = this.#getPlayerColor(playerId)
 
@@ -49,7 +49,12 @@ class OnlineGame {
       this.#gameStateHasNotChangedReasonCode = 1 // black attempted to move on white turn
       return
     } else {
-      const { from, to, promoteTo } = move
+      if (moveInfo === null || moveInfo === undefined) {
+        this.#gameStateHasChanged = false
+        this.#gameStateHasNotChangedReasonCode = 2 // move supplied was not valid
+        return
+      }
+      const { from, to, promoteTo } = moveInfo
       this.#chessGame.playMove(from, to, promoteTo)
 
       gameStatus = this.#chessGame.getGameStatus()
