@@ -45,6 +45,72 @@ const expectMoveFailureAfterInvalidMove = (clientSocket, moveInfo, moveCount, ex
   })
 }
 
+const expectDrawStateUpdatesAfterDrawEvent = (activePlayerClientSocket, drawEvent) => {
+  return new Promise(resolve => {
+    const [resolveWhiteReceivedDrawStateUpdate, whiteReceivedDrawStateUpdate] = makeEventTracker()
+    const [resolveBlackReceivedDrawStateUpdate, blackReceivedDrawStateUpdate] = makeEventTracker()
+    whiteClientSocket.on('game:draw-state-update', () => {
+      whiteClientSocket.off()
+      resolveWhiteReceivedDrawStateUpdate()
+    })
+    blackClientSocket.on('game:draw-state-update', () => {
+      blackClientSocket.off()
+      resolveBlackReceivedDrawStateUpdate()
+    })
+    activePlayerClientSocket.emit(`game:draw:${drawEvent}`)
+    Promise.all([whiteReceivedDrawStateUpdate, blackReceivedDrawStateUpdate]).then(() => resolve())
+  })
+}
+
+const expectGameConclusionAfterDrawEvent = (activePlayerClientSocket, drawEvent) => {
+  return new Promise(resolve => {
+    const [resolveWhiteReceivedGameStateUpdate, whiteReceivedGameStateUpdate] = makeEventTracker()
+    const [resolveBlackReceivedGameStateUpdate, blackReceivedGameStateUpdate] = makeEventTracker()
+    whiteClientSocket.on('game:game-state-update', (gameState) => {
+      expect(gameState.gameStatus).toBe(12)
+      whiteClientSocket.off()
+      resolveWhiteReceivedGameStateUpdate()
+    })
+    blackClientSocket.on('game:game-state-update', (gameState) => {
+      expect(gameState.gameStatus).toBe(12)
+      blackClientSocket.off()
+      resolveBlackReceivedGameStateUpdate()
+    })
+    activePlayerClientSocket.emit(`game:draw:${drawEvent}`)
+    Promise.all([whiteReceivedGameStateUpdate, blackReceivedGameStateUpdate]).then(() => resolve())
+  })
+}
+
+const expectNoDrawStateChangeAfterDrawEvent = (clientSocket, drawEvent) => {
+  return new Promise(resolve => {
+    clientSocket.on('game:no-draw-state-change', () => {
+      clientSocket.off()
+      resolve()
+    })
+    clientSocket.emit(`game:draw:${drawEvent}`)
+  })
+}
+
+const expectChessGameStatusOfOnlineGame = (clientSocket, expectedGameStatus) => {
+  return new Promise(resolve => {
+    clientSocket.on('game:current-state', (onlineGameInfo) => {
+      expect(onlineGameInfo.gameState.gameStatus).toBe(expectedGameStatus)
+      resolve()
+    })
+    clientSocket.emit('game:recover-state')
+  })
+}
+
+const expectGameFinishedResponse = (clientSocket, eventName) => {
+  return new Promise(resolve => {
+    clientSocket.on('game:finished', () => {
+      clientSocket.off()
+      resolve()
+    })
+    clientSocket.emit(eventName)
+  })
+}
+
 const assignSocketsByPlayerColor = (onlineGameInfo, clientSocket, serverSocket) => {
   if (onlineGameInfo.gameState.playerColor === 'white') {
     whiteClientSocket = clientSocket
@@ -147,13 +213,7 @@ describe('onlineGameHandlers testing', () => {
           whiteClientSocket.emit('user:get-game-status')
         })
 
-        await new Promise(resolve => {
-          whiteClientSocket.on('game:current-state', (onlineGameInfo) => {
-            expect(onlineGameInfo.gameState.gameStatus).toBe(4)
-            resolve()
-          })
-          whiteClientSocket.emit('game:recover-state')
-        })
+        await expectChessGameStatusOfOnlineGame(whiteClientSocket, 4)
       })
 
       test('Attempting to supply a move for the opponent leads to no change of the board and appropriate status code response', async () => {
@@ -204,6 +264,207 @@ describe('onlineGameHandlers testing', () => {
       })
     })
 
+    describe('and draw related actions are taken', () => {
+      test('If both players agree to a draw (does not have to be during the same move), the game ends', async () => {
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
+
+        await expectGameConclusionAfterDrawEvent(blackClientSocket, 'make-offer')
+      })
+
+      test('Players can decline or withdraw offers', async () => {
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
+
+        await expectChessGameStatusOfOnlineGame(whiteClientSocket, 4)
+      })
+
+      test('Players can choose whether they would like draw offers', async () => {
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers')
+
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
+
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
+
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers')
+
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+
+        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer')
+      })
+
+      test('Draw related actions that do not change the draw state receive an appropriate response', async () => {
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
+
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'no-offers')
+
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'want-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer')
+
+      })
+    })
+
+    describe('and the game is to be terminated early', () => {
+      test('Players can choose to resign at any time', async () => {
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
+        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
+
+        await new Promise(resolve => {
+          const [resolveWhiteReceivedGameStateUpdate, whiteReceivedGameStateUpdate] = makeEventTracker()
+          const [resolveBlackReceivedGameStateUpdate, blackReceivedGameStateUpdate] = makeEventTracker()
+          whiteClientSocket.on('game:game-state-update', (gameState) => {
+            expect(gameState.gameStatus).toBe(6)
+            whiteClientSocket.off()
+            resolveWhiteReceivedGameStateUpdate()
+          })
+          blackClientSocket.on('game:game-state-update', (gameState) => {
+            expect(gameState.gameStatus).toBe(6)
+            blackClientSocket.off()
+            resolveBlackReceivedGameStateUpdate()
+          })
+          blackClientSocket.emit('game:resign')
+          Promise.all([whiteReceivedGameStateUpdate, blackReceivedGameStateUpdate]).then(() => resolve())
+        })
+      })
+    })
+  })
+
+  describe('When the game has finished', () => {
+    beforeEach(async () => {
+      await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
+      await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
+      await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
+      await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
+      await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
+    })
+    
+    test('it is not possible to change the state of the game...', async () => {
+      await new Promise(resolve => {
+        blackClientSocket.on('game:finished', () => {
+          blackClientSocket.off()
+          resolve()
+        })
+        blackClientSocket.emit('game:play-move', {from: [6, 0], to: [4, 0]}, 5)
+      })
+
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers')
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:resign')
+    })
+
+    test('...but it is possible to get a representation of the final state of the online game', async () => {
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers')
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+
+      await expectGameFinishedResponse(blackClientSocket, 'game:resign')
+
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
+
+      await new Promise(resolve => {
+        whiteClientSocket.on('game:current-state', (onlineGameInfo) => {
+          expect(onlineGameInfo.gameState.gameStatus).toBe(4)
+          expect(onlineGameInfo.gameState.playerColor).toBe('white')
+          expect(onlineGameInfo.gameState.whitePieceInfo[0].type).toBe('pawn')
+          expect(onlineGameInfo.gameState.moveHistory).toHaveLength(5)
+          expect(onlineGameInfo.drawState.white.offersDraw).toBe(false)
+          expect((typeof onlineGameInfo.userState.white.username === 'string')).toBe(true)
+          whiteClientSocket.off()
+          resolve()
+        })
+        whiteClientSocket.emit('game:recover-state')
+      })
+    })
   })
 
 })
