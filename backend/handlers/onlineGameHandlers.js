@@ -1,9 +1,9 @@
 const isDrawStateEqual = (drawState1, drawState2) => {
   return (
-    drawState1.player.offersDraw === drawState2.player.offersDraw
-    && drawState1.player.wantsDrawOffers === drawState2.player.wantsDrawOffers
-    && drawState1.opponent.offersDraw === drawState2.opponent.offersDraw
-    && drawState1.opponent.wantsDrawOffers === drawState2.opponent.wantsDrawOffers
+    drawState1.white.offersDraw === drawState2.white.offersDraw
+    && drawState1.white.wantsDrawOffers === drawState2.white.wantsDrawOffers
+    && drawState1.black.offersDraw === drawState2.black.offersDraw
+    && drawState1.black.wantsDrawOffers === drawState2.black.wantsDrawOffers
   )
 }
 
@@ -55,6 +55,8 @@ const handleDrawOperation = (io, socket, onlineUsers, operationName) => {
 
   if (!isDrawStateEqual(drawStateBefore, drawStateAfter)) {
     emitDrawStateUpdate(io, onlineGame)
+  } else {
+    io.to(`user:${userId}`).emit('game:no-draw-state-change')
   }
 }
 
@@ -140,6 +142,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   // (error) game:not-found
   // (error) game:finished 
   // (error) game:move-failure
+  // (error) game:no-draw-state-change
 }
 
 module.exports = { registerOnlineGameHandlers }
