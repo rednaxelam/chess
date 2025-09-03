@@ -25,7 +25,7 @@ const registerSocketHandlers = socket => {
   socket.on('game:game-state-update', (gameState) => store.dispatch(updateGameState(gameState)))
   socket.on('game:draw-state-update', (drawState) => store.dispatch(updateDrawState(drawState)))
   socket.on('game:not-found', () => store.dispatch(updateErrorState({ type: 'usersError', errorCode: 4 })))
-  socket.on('game:finished ', () => store.dispatch(updateErrorState({ type: 'gameError', errorCode: 5 })))
+  socket.on('game:finished', () => store.dispatch(updateErrorState({ type: 'gameError', errorCode: 5 })))
   socket.on('game:move-failure', (gameErrorInfo) => store.dispatch(updateErrorState({ type: 'gameError', errorCode: gameErrorInfo.gameErrCode })))
   socket.on('game:no-draw-state-change', () => store.dispatch(updateErrorState({ type: 'gameError', errorCode: 3 })))
 }
