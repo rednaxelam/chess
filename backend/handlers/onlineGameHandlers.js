@@ -79,13 +79,13 @@ const handleGameTermination = (io, socket, onlineUsers, operationName) => {
 
 const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   
-  const playMove = (moveInfo, moveCount) => {
+  const playMove = (moveInfo, gameStateVersion) => {
     const userId = socket.request.userId
 
     const onlineGame = getOnlineGame(io, userId, onlineUsers)
     if (!onlineGame) return
 
-    onlineGame.playMove(userId, moveInfo, moveCount)
+    onlineGame.playMove(userId, moveInfo, gameStateVersion)
 
     if (!onlineGame.gameStateHasChanged()) {
       if (!onlineGame.isActiveGame()) {

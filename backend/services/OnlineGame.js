@@ -14,7 +14,9 @@ class OnlineGame {
   #wantsDrawOffers = [true, true]
   #gameStateHasChanged = true
   #gameStateHasNotChangedReasonCode = null
-  #moveCount = 0
+  #version = {
+    gameState: 0,
+  }
 
   constructor(userId1, userId2) {
     if (Math.random() < 0.5) {
@@ -28,13 +30,13 @@ class OnlineGame {
 
   // methods to interact with active game
 
-  playMove(playerId, moveInfo, moveCount) {
+  playMove(playerId, moveInfo, gameStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
     const playerColor = this.#getPlayerColor(playerId)
 
-    if (!this.#isMoveCountsEqual(moveCount)) {
+    if (!this.#doesClientHaveLatestVersion('gameState', gameStateVersion)) {
       this.#gameStateHasChanged = false
-      this.#gameStateHasNotChangedReasonCode = 4 // move counts are not equal
+      this.#gameStateHasNotChangedReasonCode = 4 // internal game state version does not match version supplied
       return
     }
     
@@ -64,7 +66,7 @@ class OnlineGame {
       } else {
         this.#gameStateHasChanged = true
         this.#gameStateHasNotChangedReasonCode = null
-        this.#moveCount++
+        this.#version.gameState++
       }
     }
   }
@@ -207,7 +209,7 @@ class OnlineGame {
     // 1 - black attempted to move on white turn
     // 2 - move supplied was not valid
     // 3 - draw related action that does not change the game state
-    // 4 - move counts are not equal (when attempting to play move)
+    // 4 - internal game state version does not match version supplied (client state is likely out of sync)
     // 5 - game has finished and no further actions can be taken
     return this.#gameStateHasNotChangedReasonCode
   }
@@ -254,8 +256,8 @@ class OnlineGame {
     }
   }
 
-  #isMoveCountsEqual(moveCount) {
-    return moveCount === this.#moveCount
+  #doesClientHaveLatestVersion(stateType, version) {
+    return version === this.#version[stateType]
   }
 
   #inconclusiveDrawActionHasBeenMade() {
