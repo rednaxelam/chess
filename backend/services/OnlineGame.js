@@ -16,6 +16,7 @@ class OnlineGame {
   #gameStateHasNotChangedReasonCode = null
   #version = {
     gameState: 0,
+    drawState: 0,
   }
 
   constructor(userId1, userId2) {
@@ -32,14 +33,14 @@ class OnlineGame {
 
   playMove(playerId, moveInfo, gameStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
-    const playerColor = this.#getPlayerColor(playerId)
-
-    if (!this.#doesClientHaveLatestVersion('gameState', gameStateVersion)) {
+    if (!this.#isCorrectVersion('gameState', gameStateVersion)) {
       this.#gameStateHasChanged = false
       this.#gameStateHasNotChangedReasonCode = 4 // internal game state version does not match version supplied
       return
     }
-    
+
+    const playerColor = this.#getPlayerColor(playerId)
+
     let gameStatus = this.#chessGame.getGameStatus()
 
     if (playerColor === 'white' && gameStatus % 2 === 1) {
@@ -71,8 +72,12 @@ class OnlineGame {
     }
   }
 
-  playerOffersDraw(playerId) {
+  playerOffersDraw(playerId, drawStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    if (!this.#isCorrectVersion('drawState', drawStateVersion)) {
+      this.#drawStateVersionMismatch()
+      return
+    }
     if (this.isDrawOffersDisabled()) {
       this.#inconclusiveDrawActionHasBeenMade()
       return
@@ -81,8 +86,10 @@ class OnlineGame {
     const playerColor = this.#getPlayerColor(playerId)
     
     if (playerColor === 'white') {
+      if (!this.#drawAgreementArray[0]) this.#version.drawState++
       this.#drawAgreementArray[0] = true
     } else {
+      if (!this.#drawAgreementArray[1]) this.#version.drawState++
       this.#drawAgreementArray[1] = true
     }
 
@@ -90,42 +97,67 @@ class OnlineGame {
       this.#gameStateHasChanged = true
       this.#gameStateHasNotChangedReasonCode = null
       this.#chessGame.drawViaAgreement()
+      this.#version.gameState++
     } else {
       this.#inconclusiveDrawActionHasBeenMade()
     }
   }
 
-  playerResetsDrawAgreement() {
+  playerResetsDrawAgreement(playerId, drawStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    if (!this.#isCorrectVersion('drawState', drawStateVersion)) {
+      this.#drawStateVersionMismatch()
+      return
+    }
+
+    if (this.#drawAgreementArray[0] || this.#drawAgreementArray[1]) this.#version.drawState++
     this.#resetDrawAgreementArray()
 
     this.#inconclusiveDrawActionHasBeenMade()
   }
 
-  playerDoesNotWantDrawOffers(playerId) {
+  playerDoesNotWantDrawOffers(playerId, drawStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    if (!this.#isCorrectVersion('drawState', drawStateVersion)) {
+      this.#drawStateVersionMismatch()
+      return
+    }
+
     const playerColor = this.#getPlayerColor(playerId)
 
     this.#resetDrawAgreementArray()
 
     if (playerColor === 'white') {
+      if (this.#wantsDrawOffers[0]) this.#version.drawState++
       this.#wantsDrawOffers[0] = false
     } else {
+      if (this.#wantsDrawOffers[1]) this.#version.drawState++
       this.#wantsDrawOffers[1] = false
     }
 
     this.#inconclusiveDrawActionHasBeenMade()
   }
 
-  playerWantsDrawOffers(playerId) {
+  playerWantsDrawOffers(playerId, drawStateVersion) {
     if (!this.isActiveGame()) {this.#gameIsFinishedStatusUpdate(); return}
+    if (!this.#isCorrectVersion('drawState', drawStateVersion)) {
+      this.#drawStateVersionMismatch()
+      return
+    }
+    if (this.#wantsDrawOffers[0] && this.#wantsDrawOffers[1]) {
+      this.#inconclusiveDrawActionHasBeenMade()
+      return
+    }
+
     const playerColor = this.#getPlayerColor(playerId)
 
     this.#resetDrawAgreementArray()
 
     if (playerColor === 'white') {
+      if (!this.#wantsDrawOffers[0]) this.#version.drawState++
       this.#wantsDrawOffers[0] = true
     } else {
+      if (!this.#wantsDrawOffers[1]) this.#version.drawState++
       this.#wantsDrawOffers[1] = true
     }
 
@@ -144,6 +176,7 @@ class OnlineGame {
 
     this.#gameStateHasChanged = true
     this.#gameStateHasNotChangedReasonCode = null
+    this.#version.gameState++
   }
 
   playerAbandons(playerId) {
@@ -158,6 +191,7 @@ class OnlineGame {
 
     this.#gameStateHasChanged = true
     this.#gameStateHasNotChangedReasonCode = null
+    this.#version.gameState++
   }
 
   playerTimeout(playerId) {
@@ -172,6 +206,7 @@ class OnlineGame {
 
     this.#gameStateHasChanged = true
     this.#gameStateHasNotChangedReasonCode = null
+    this.#version.gameState++
   }
 
   // methods to get state representing the status of the game
@@ -211,6 +246,7 @@ class OnlineGame {
     // 3 - draw related action that does not change the game state
     // 4 - internal game state version does not match version supplied (client state is likely out of sync)
     // 5 - game has finished and no further actions can be taken
+    // 6 - internal draw state version does not match version supplied (client state is likely out of sync)
     return this.#gameStateHasNotChangedReasonCode
   }
 
@@ -256,13 +292,18 @@ class OnlineGame {
     }
   }
 
-  #doesClientHaveLatestVersion(stateType, version) {
+  #isCorrectVersion(stateType, version) {
     return version === this.#version[stateType]
   }
 
   #inconclusiveDrawActionHasBeenMade() {
     this.#gameStateHasChanged = false
     this.#gameStateHasNotChangedReasonCode = 3 // draw related action that does not change the game state
+  }
+
+  #drawStateVersionMismatch() {
+    this.#gameStateHasChanged = false
+    this.#gameStateHasNotChangedReasonCode = 6 // internal draw state version does not match version supplied
   }
 
   #gameIsFinishedStatusUpdate() {
