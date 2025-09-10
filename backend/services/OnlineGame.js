@@ -216,6 +216,7 @@ class OnlineGame {
     const currentGameStateRepresentation = this.#chessGame.getCurrentGameStateRepresentation()
     
     currentGameStateRepresentation.playerColor = playerColor
+    currentGameStateRepresentation.version = this.#version.gameState
 
     return currentGameStateRepresentation
   }
@@ -230,6 +231,7 @@ class OnlineGame {
         offersDraw: this.#drawAgreementArray[1],
         wantsDrawOffers: this.#wantsDrawOffers[1],
       },
+      version: this.#version.drawState
     }
   }
 
@@ -275,6 +277,13 @@ class OnlineGame {
 
   isUserPartOfGame(playerId) {
     return playerId === this.#whitePlayerId || playerId === this.#blackPlayerId
+  }
+
+  getVersionInfo() {
+    return {
+      gameState: this.#version.gameState,
+      drawState: this.#version.drawState,
+    }
   }
 
   // helper methods
