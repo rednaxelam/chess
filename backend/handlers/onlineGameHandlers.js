@@ -1,9 +1,6 @@
-const isDrawStateEqual = (drawState1, drawState2) => {
+const drawStateHasChanged = (drawState1, drawState2) => {
   return (
-    drawState1.white.offersDraw === drawState2.white.offersDraw
-    && drawState1.white.wantsDrawOffers === drawState2.white.wantsDrawOffers
-    && drawState1.black.offersDraw === drawState2.black.offersDraw
-    && drawState1.black.wantsDrawOffers === drawState2.black.wantsDrawOffers
+    drawState1.version !== drawState2.version
   )
 }
 
@@ -15,8 +12,8 @@ const emitGameStateUpdate = (io, onlineGame) => {
 
 const emitDrawStateUpdate = (io, onlineGame) => {
   const usersInGame = onlineGame.getUsers()
-  io.to(`user:${usersInGame.white}`).emit('game:draw-state-update', onlineGame.getCurrentDrawAgreementState(usersInGame.white))
-  io.to(`user:${usersInGame.black}`).emit('game:draw-state-update', onlineGame.getCurrentDrawAgreementState(usersInGame.black))
+  io.to(`user:${usersInGame.white}`).emit('game:draw-state-update', onlineGame.getCurrentDrawAgreementState())
+  io.to(`user:${usersInGame.black}`).emit('game:draw-state-update', onlineGame.getCurrentDrawAgreementState())
 }
 
 const getOnlineGame = (io, userId, onlineUsers) => {
@@ -30,7 +27,7 @@ const getOnlineGame = (io, userId, onlineUsers) => {
   }
 }
 
-const handleDrawOperation = (io, socket, onlineUsers, operationName) => {
+const handleDrawOperation = (io, socket, onlineUsers, operationName, drawStateVersion) => {
   const userId = socket.request.userId
 
   const onlineGame = getOnlineGame(io, userId, onlineUsers)
@@ -41,9 +38,9 @@ const handleDrawOperation = (io, socket, onlineUsers, operationName) => {
     return
   }
 
-  const drawStateBefore = onlineGame.getCurrentDrawAgreementState(userId)
+  const drawStateBefore = onlineGame.getCurrentDrawAgreementState()
 
-  onlineGame[operationName](userId)
+  onlineGame[operationName](userId, drawStateVersion)
 
   if (onlineGame.gameStateHasChanged()) {
     emitGameStateUpdate(io, onlineGame)
@@ -51,12 +48,16 @@ const handleDrawOperation = (io, socket, onlineUsers, operationName) => {
     return
   }
 
-  const drawStateAfter = onlineGame.getCurrentDrawAgreementState(userId)
+  const drawStateAfter = onlineGame.getCurrentDrawAgreementState()
 
-  if (!isDrawStateEqual(drawStateBefore, drawStateAfter)) {
+  if (drawStateHasChanged(drawStateBefore, drawStateAfter)) {
     emitDrawStateUpdate(io, onlineGame)
   } else {
-    io.to(`user:${userId}`).emit('game:no-draw-state-change')
+    if (onlineGame.getGameStateHasNotChangedReasonCode() === 6) {
+      io.to(`user:${userId}`).emit('game:draw-state-out-of-sync')
+    } else {
+      io.to(`user:${userId}`).emit('game:no-draw-state-change')
+    }
   }
 }
 
@@ -91,7 +92,12 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
       if (!onlineGame.isActiveGame()) {
         io.to(`user:${userId}`).emit('game:finished')
       } else {
-        io.to(`user:${userId}`).emit('game:move-failure', { gameErrCode: onlineGame.getGameStateHasNotChangedReasonCode() })
+        const gameErrCode = onlineGame.getGameStateHasNotChangedReasonCode()
+        if (gameErrCode === 4) {
+          io.to(`user:${userId}`).emit('game:game-state-out-of-sync')
+        } else {
+          io.to(`user:${userId}`).emit('game:move-failure', { gameErrCode })
+        }
       }
     } else {
       emitGameStateUpdate(io, onlineGame)
@@ -109,7 +115,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
 
   const resign = () => handleGameTermination(io, socket, onlineUsers, 'playerResigns')
 
-  const recoverOnlineGameState = () => {
+  const recoverAllOnlineGameState = () => {
     const userId = socket.request.userId
 
     const onlineGame = getOnlineGame(io, userId, onlineUsers)
@@ -127,22 +133,63 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState, userState })
   }
 
+  const recoverGameState = () => {
+    const userId = socket.request.userId
+
+    const onlineGame = getOnlineGame(io, userId, onlineUsers)
+    if (!onlineGame) return
+
+    const gameState = onlineGame.getCurrentGameState(userId)
+
+    io.to(`user:${userId}`).emit('game:current-game-state', { gameState })
+  }
+
+  const recoverDrawState = () => {
+    const userId = socket.request.userId
+
+    const onlineGame = getOnlineGame(io, userId, onlineUsers)
+    if (!onlineGame) return
+
+    const drawState = onlineGame.getCurrentDrawAgreementState()
+
+    io.to(`user:${userId}`).emit('game:current-draw-state', { drawState })
+  }
+
+  const getVersionInfo = () => {
+    const userId = socket.request.userId
+
+    const onlineGame = getOnlineGame(io, userId, onlineUsers)
+    if (!onlineGame) return
+
+    const versionInfo = onlineGame.getVersionInfo()
+
+    io.to(`user:${userId}`).emit('game:current-version-info', { versionInfo })
+  }
+
   socket.on('game:play-move', playMove)
   socket.on('game:draw:make-offer', offerDraw)
   socket.on('game:draw:reset-offers', resetDrawOffers)
   socket.on('game:draw:no-offers', doesNotWantDrawOffers)
   socket.on('game:draw:want-offers', wantsDrawOffers)
   socket.on('game:resign', resign)
-  socket.on('game:recover-state', recoverOnlineGameState)
+  socket.on('game:recover-state', recoverAllOnlineGameState)
+  socket.on('game:recover-game-state', recoverGameState)
+  socket.on('game:recover-draw-state', recoverDrawState)
+  socket.on('game:get-version-info', getVersionInfo)
 
   // possible emitted events:
   // game:game-state-update
   // game:draw-state-update
   // game:current-state
+  // game:current-game-state
+  // game:current-draw-state
+  // game:current-version-info
   // (error) game:not-found
   // (error) game:finished 
   // (error) game:move-failure
   // (error) game:no-draw-state-change
+  // (error) game:game-state-out-of-sync
+  // (error) game:draw-state-out-of-sync
 }
 
 module.exports = { registerOnlineGameHandlers }
