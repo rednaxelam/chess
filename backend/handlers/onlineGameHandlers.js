@@ -27,40 +27,6 @@ const getOnlineGame = (io, userId, onlineUsers) => {
   }
 }
 
-const handleDrawOperation = (io, socket, onlineUsers, operationName, drawStateVersion) => {
-  const userId = socket.request.userId
-
-  const onlineGame = getOnlineGame(io, userId, onlineUsers)
-  if (!onlineGame) return
-
-  if (!onlineGame.isActiveGame()) {
-    io.to(`user:${userId}`).emit('game:finished')
-    return
-  }
-
-  const drawStateBefore = onlineGame.getCurrentDrawAgreementState()
-
-  onlineGame[operationName](userId, drawStateVersion)
-
-  if (onlineGame.gameStateHasChanged()) {
-    emitGameStateUpdate(io, onlineGame)
-    onlineUsers.chessGameHasConcluded(onlineGame)
-    return
-  }
-
-  const drawStateAfter = onlineGame.getCurrentDrawAgreementState()
-
-  if (drawStateHasChanged(drawStateBefore, drawStateAfter)) {
-    emitDrawStateUpdate(io, onlineGame)
-  } else {
-    if (onlineGame.getGameStateHasNotChangedReasonCode() === 6) {
-      io.to(`user:${userId}`).emit('game:draw-state-out-of-sync')
-    } else {
-      io.to(`user:${userId}`).emit('game:no-draw-state-change')
-    }
-  }
-}
-
 const handleGameTermination = (io, socket, onlineUsers, operationName) => {
   const userId = socket.request.userId
 
@@ -105,13 +71,47 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     }
   }
 
-  const offerDraw = () => handleDrawOperation(io, socket, onlineUsers, 'playerOffersDraw')
+  const handleDrawOperation = (operationName, drawStateVersion) => {
+    const userId = socket.request.userId
 
-  const resetDrawOffers = () => handleDrawOperation(io, socket, onlineUsers, 'playerResetsDrawAgreement')
+    const onlineGame = getOnlineGame(io, userId, onlineUsers)
+    if (!onlineGame) return
 
-  const doesNotWantDrawOffers = () => handleDrawOperation(io, socket, onlineUsers, 'playerDoesNotWantDrawOffers')
+    if (!onlineGame.isActiveGame()) {
+      io.to(`user:${userId}`).emit('game:finished')
+      return
+    }
 
-  const wantsDrawOffers = () => handleDrawOperation(io, socket, onlineUsers, 'playerWantsDrawOffers')
+    const drawStateBefore = onlineGame.getCurrentDrawAgreementState()
+
+    onlineGame[operationName](userId, drawStateVersion)
+
+    if (onlineGame.gameStateHasChanged()) {
+      emitGameStateUpdate(io, onlineGame)
+      onlineUsers.chessGameHasConcluded(onlineGame)
+      return
+    }
+
+    const drawStateAfter = onlineGame.getCurrentDrawAgreementState()
+
+    if (drawStateHasChanged(drawStateBefore, drawStateAfter)) {
+      emitDrawStateUpdate(io, onlineGame)
+    } else {
+      if (onlineGame.getGameStateHasNotChangedReasonCode() === 6) {
+        io.to(`user:${userId}`).emit('game:draw-state-out-of-sync')
+      } else {
+        io.to(`user:${userId}`).emit('game:no-draw-state-change')
+      }
+    }
+  }
+
+  const offerDraw = (drawStateVersion) => handleDrawOperation('playerOffersDraw', drawStateVersion)
+
+  const resetDrawOffers = (drawStateVersion) => handleDrawOperation('playerResetsDrawAgreement', drawStateVersion)
+
+  const doesNotWantDrawOffers = (drawStateVersion) => handleDrawOperation('playerDoesNotWantDrawOffers', drawStateVersion)
+
+  const wantsDrawOffers = (drawStateVersion) => handleDrawOperation('playerWantsDrawOffers', drawStateVersion)
 
   const resign = () => handleGameTermination(io, socket, onlineUsers, 'playerResigns')
 
