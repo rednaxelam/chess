@@ -104,14 +104,14 @@ describe('OnlineGame Testing', () => {
         onlineGame.playMove(whitePlayerId, {from: [1, 4], to: [3, 4]}, 0)
         onlineGame.playMove(blackPlayerId, {from: [6, 6], to: [4, 6]}, 1)
 
-        onlineGame.playerOffersDraw(whitePlayerId)
+        onlineGame.playerOffersDraw(whitePlayerId, 0)
         expect(onlineGame.gameStateHasChanged()).toBe(false)
         expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(3)
 
         onlineGame.playMove(whitePlayerId, {from: [0, 1], to: [2, 2]}, 2)
         onlineGame.playMove(blackPlayerId, {from: [6, 5], to: [4, 5]}, 3)
 
-        onlineGame.playerOffersDraw(blackPlayerId)
+        onlineGame.playerOffersDraw(blackPlayerId, 1)
         expect(onlineGame.gameStateHasChanged()).toBe(true)
         expect(onlineGame.getCurrentGameState(whitePlayerId).gameStatus).toBe(12)
         expect(onlineGame.getCurrentGameState(blackPlayerId).gameStatus).toBe(12)
@@ -123,17 +123,17 @@ describe('OnlineGame Testing', () => {
         onlineGame.playMove(whitePlayerId, {from: [1, 4], to: [3, 4]}, 0)
         onlineGame.playMove(blackPlayerId, {from: [6, 6], to: [4, 6]}, 1)
 
-        onlineGame.playerOffersDraw(whitePlayerId)
+        onlineGame.playerOffersDraw(whitePlayerId, 0)
         onlineGame.playMove(whitePlayerId, {from: [0, 1], to: [2, 2]}, 2)
         onlineGame.playMove(blackPlayerId, {from: [6, 5], to: [4, 5]}, 3)
 
-        onlineGame.playerResetsDrawAgreement()
-        onlineGame.playerOffersDraw(blackPlayerId)
+        onlineGame.playerResetsDrawAgreement(whitePlayerId, 1)
+        onlineGame.playerOffersDraw(blackPlayerId, 2)
         expect(onlineGame.gameStateHasChanged()).toBe(false)
         expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(3)
 
-        onlineGame.playerResetsDrawAgreement()
-        onlineGame.playerOffersDraw(whitePlayerId)
+        onlineGame.playerResetsDrawAgreement(blackPlayerId, 3)
+        onlineGame.playerOffersDraw(whitePlayerId, 4)
         expect(onlineGame.gameStateHasChanged()).toBe(false)
         expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(3)
 
@@ -146,34 +146,48 @@ describe('OnlineGame Testing', () => {
       test('Players can choose whether they would like draw offers (and code using OnlineGame can behave accordingly)', () => {
         const { onlineGame, whitePlayerId, blackPlayerId } = onlineGameSetupContainer
 
-        onlineGame.playerDoesNotWantDrawOffers(whitePlayerId)
+        onlineGame.playerDoesNotWantDrawOffers(whitePlayerId, 0)
         expect(onlineGame.isDrawOffersDisabled()).toBe(true)
 
         onlineGame.playMove(whitePlayerId, {from: [1, 4], to: [3, 4]}, 0)
-        onlineGame.playerOffersDraw(blackPlayerId)
-        onlineGame.playerOffersDraw(blackPlayerId)
-        onlineGame.playerDoesNotWantDrawOffers(blackPlayerId)
+        onlineGame.playerOffersDraw(blackPlayerId, 1)
+        onlineGame.playerOffersDraw(blackPlayerId, 1)
+        onlineGame.playerDoesNotWantDrawOffers(blackPlayerId, 1)
         expect(onlineGame.isDrawOffersDisabled()).toBe(true)
 
         onlineGame.playMove(blackPlayerId, {from: [6, 6], to: [4, 6]}, 1)
-        onlineGame.playerWantsDrawOffers(whitePlayerId)
+        onlineGame.playerWantsDrawOffers(whitePlayerId, 2)
         expect(onlineGame.isDrawOffersDisabled()).toBe(true)
 
-        onlineGame.playerOffersDraw(whitePlayerId)
+        onlineGame.playerOffersDraw(whitePlayerId, 3)
         expect(onlineGame.gameStateHasChanged()).toBe(false)
         expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(3)
 
-        onlineGame.playerWantsDrawOffers(blackPlayerId)
+        onlineGame.playerWantsDrawOffers(blackPlayerId, 3)
         expect(onlineGame.isDrawOffersDisabled()).toBe(false)
 
-        onlineGame.playerOffersDraw(blackPlayerId)
+        onlineGame.playerOffersDraw(blackPlayerId, 4)
         expect(onlineGame.gameStateHasChanged()).toBe(false)
         expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(3)
 
-        onlineGame.playerOffersDraw(whitePlayerId)
+        onlineGame.playerOffersDraw(whitePlayerId, 5)
         expect(onlineGame.gameStateHasChanged()).toBe(true)
         expect(onlineGame.getCurrentGameState(whitePlayerId).gameStatus).toBe(12)
         expect(onlineGame.getCurrentGameState(blackPlayerId).gameStatus).toBe(12)
+      })
+
+      test('Attempting to make a draw related action with outdated draw state leads to an out of sync status code', () => {
+        const { onlineGame, whitePlayerId, blackPlayerId } = onlineGameSetupContainer
+        onlineGame.playerOffersDraw(whitePlayerId, 1)
+        expect(onlineGame.gameStateHasChanged()).toBe(false)
+        expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(6)
+
+        onlineGame.playerOffersDraw(whitePlayerId, 0)
+
+        onlineGame.playerOffersDraw(blackPlayerId, 0)
+        expect(onlineGame.gameStateHasChanged()).toBe(false)
+        expect(onlineGame.getGameStateHasNotChangedReasonCode()).toBe(6)
+
       })
 
     })

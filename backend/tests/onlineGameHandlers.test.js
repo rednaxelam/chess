@@ -45,7 +45,17 @@ const expectMoveFailureAfterInvalidMove = (clientSocket, moveInfo, moveCount, ex
   })
 }
 
-const expectDrawStateUpdatesAfterDrawEvent = (activePlayerClientSocket, drawEvent) => {
+const expectGameStateOutOfSyncAfterMove = (clientSocket, moveInfo, moveCount) => {
+  return new Promise(resolve => {
+    clientSocket.on('game:game-state-out-of-sync', () => {
+      clientSocket.off()
+      resolve()
+    })
+    clientSocket.emit('game:play-move', moveInfo, moveCount)
+  })
+}
+
+const expectDrawStateUpdatesAfterDrawEvent = (activePlayerClientSocket, drawEvent, drawStateVersion) => {
   return new Promise(resolve => {
     const [resolveWhiteReceivedDrawStateUpdate, whiteReceivedDrawStateUpdate] = makeEventTracker()
     const [resolveBlackReceivedDrawStateUpdate, blackReceivedDrawStateUpdate] = makeEventTracker()
@@ -57,12 +67,12 @@ const expectDrawStateUpdatesAfterDrawEvent = (activePlayerClientSocket, drawEven
       blackClientSocket.off()
       resolveBlackReceivedDrawStateUpdate()
     })
-    activePlayerClientSocket.emit(`game:draw:${drawEvent}`)
+    activePlayerClientSocket.emit(`game:draw:${drawEvent}`, drawStateVersion)
     Promise.all([whiteReceivedDrawStateUpdate, blackReceivedDrawStateUpdate]).then(() => resolve())
   })
 }
 
-const expectGameConclusionAfterDrawEvent = (activePlayerClientSocket, drawEvent) => {
+const expectGameConclusionAfterDrawEvent = (activePlayerClientSocket, drawEvent, drawStateVersion) => {
   return new Promise(resolve => {
     const [resolveWhiteReceivedGameStateUpdate, whiteReceivedGameStateUpdate] = makeEventTracker()
     const [resolveBlackReceivedGameStateUpdate, blackReceivedGameStateUpdate] = makeEventTracker()
@@ -76,19 +86,29 @@ const expectGameConclusionAfterDrawEvent = (activePlayerClientSocket, drawEvent)
       blackClientSocket.off()
       resolveBlackReceivedGameStateUpdate()
     })
-    activePlayerClientSocket.emit(`game:draw:${drawEvent}`)
+    activePlayerClientSocket.emit(`game:draw:${drawEvent}`, drawStateVersion)
     Promise.all([whiteReceivedGameStateUpdate, blackReceivedGameStateUpdate]).then(() => resolve())
   })
 }
 
-const expectNoDrawStateChangeAfterDrawEvent = (clientSocket, drawEvent) => {
+const expectNoDrawStateChangeAfterDrawEvent = (clientSocket, drawEvent, drawStateVersion) => {
   return new Promise(resolve => {
     clientSocket.on('game:no-draw-state-change', () => {
       clientSocket.off()
       resolve()
     })
-    clientSocket.emit(`game:draw:${drawEvent}`)
+    clientSocket.emit(`game:draw:${drawEvent}`, drawStateVersion)
   })
+}
+
+const expectDrawStateOutOfSyncAfterDrawEvent = (clientSocket, drawEvent, drawStateVersion) => {
+  return new Promise(resolve => {
+    clientSocket.on('game:draw-state-out-of-sync', () => {
+      clientSocket.off()
+      resolve()
+    })
+    clientSocket.emit(`game:draw:${drawEvent}`, drawStateVersion)
+  }) 
 }
 
 const expectChessGameStatusOfOnlineGame = (clientSocket, expectedGameStatus) => {
@@ -252,15 +272,17 @@ describe('onlineGameHandlers testing', () => {
         await expectMoveFailureAfterInvalidMove(blackClientSocket, [null, null], 1, 2)
       })
 
-      test('Attempting to move with an invalid move count leads to no change of the board and appropriate status code response', async () => {
-        await expectMoveFailureAfterInvalidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, null, 4)
-        await expectMoveFailureAfterInvalidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, undefined, 4)
-        await expectMoveFailureAfterInvalidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, '0', 4)
-        await expectMoveFailureAfterInvalidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, {0: 0}, 4)
+      test('Attempting to move with an invalid move count leads to no change of the board and appropriate out of sync response', async () => {
+        await expectGameStateOutOfSyncAfterMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, null)
+        await expectGameStateOutOfSyncAfterMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, undefined)
+        await expectGameStateOutOfSyncAfterMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, '0')
+        await expectGameStateOutOfSyncAfterMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, {0: 0})
 
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
 
-        await expectMoveFailureAfterInvalidMove(blackClientSocket, [null, null], '1', 4)
+        await expectGameStateOutOfSyncAfterMove(blackClientSocket, [null, null], '1')
+        await expectGameStateOutOfSyncAfterMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 0)
+        await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
       })
     })
 
@@ -269,30 +291,30 @@ describe('onlineGameHandlers testing', () => {
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 0)
 
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
 
-        await expectGameConclusionAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectGameConclusionAfterDrawEvent(blackClientSocket, 'make-offer', 1)
       })
 
       test('Players can decline or withdraw offers', async () => {
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 0)
 
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers', 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 2)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers', 3)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 4)
         
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
 
@@ -300,74 +322,83 @@ describe('onlineGameHandlers testing', () => {
       })
 
       test('Players can choose whether they would like draw offers', async () => {
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers', 0)
 
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 4], to: [3, 4]}, 0)
 
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 1)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers', 1)
 
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers', 2)
 
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 3)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 3)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 3)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 3)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 3)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers', 3)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 4)
 
-        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer', 5)
       })
 
       test('Draw related actions that do not change the draw state receive an appropriate response', async () => {
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 0)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 1)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 1)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers', 1)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers', 2)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers', 2)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers')
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 2)
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers', 3)
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 4)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 5)
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'reset-offers', 5)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers', 6)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 7)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 7)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers', 7)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers', 7)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers', 7)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 8)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 8)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'reset-offers', 8)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'reset-offers', 8)
 
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'no-offers')
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers', 8)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'no-offers', 8)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'no-offers', 8)
 
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers')
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'want-offers')
-        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers', 8)
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'no-offers', 9)
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'want-offers', 10)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'want-offers', 11)
+        await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 11)
+        await expectNoDrawStateChangeAfterDrawEvent(whiteClientSocket, 'make-offer', 11)
 
-        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers')
-        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
-        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer')
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'want-offers', 11)
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 12)
+        await expectGameConclusionAfterDrawEvent(whiteClientSocket, 'make-offer', 13)
 
+      })
+
+      test('Attempting to make a draw related action with outdated draw state leads to an out of sync response', async () => {
+        await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 0)
+        await expectDrawStateOutOfSyncAfterDrawEvent(whiteClientSocket, 'make-offer', 0)
+        await expectDrawStateOutOfSyncAfterDrawEvent(whiteClientSocket, 'make-offer', 2)
+
+        await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers', 1)
+        await expectDrawStateOutOfSyncAfterDrawEvent(whiteClientSocket, 'want-offers', 1)
       })
     })
 
@@ -416,40 +447,40 @@ describe('onlineGameHandlers testing', () => {
         blackClientSocket.emit('game:play-move', {from: [6, 0], to: [4, 0]}, 5)
       })
 
-      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer', 0)
 
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers')
-      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers', 0)
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers', 0)
 
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
 
       await expectGameFinishedResponse(blackClientSocket, 'game:resign')
     })
 
     test('...but it is possible to get a representation of the final state of the online game', async () => {
-      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:make-offer', 0)
 
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers')
-      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:reset-offers', 0)
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:reset-offers', 0)
 
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers')
-      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers')
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:no-offers', 0)
+      await expectGameFinishedResponse(blackClientSocket, 'game:draw:want-offers', 0)
 
       await expectGameFinishedResponse(blackClientSocket, 'game:resign')
 
-      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer')
+      await expectGameFinishedResponse(whiteClientSocket, 'game:draw:make-offer', 0)
 
       await new Promise(resolve => {
         whiteClientSocket.on('game:current-state', (onlineGameInfo) => {
@@ -493,7 +524,7 @@ describe('onlineGameHandlers testing', () => {
     await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [7, 5], to: [5, 7]}, 13)
     await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [3, 0]}, 14)
     await expectMoveFailureAfterInvalidMove(blackClientSocket, {from: [7, 6], to: [5, 7]}, 15, 2)
-    await expectMoveFailureAfterInvalidMove(blackClientSocket, {from: [7, 6], to: [5, 5]}, 16, 4)
+    await expectGameStateOutOfSyncAfterMove(blackClientSocket, {from: [7, 6], to: [5, 5]}, 16, 4)
     await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [7, 6], to: [5, 5]}, 15)
     await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [1, 1], to: [2, 1]}, 16)
     await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [7, 4], to: [7, 6]}, 17)
@@ -507,12 +538,12 @@ describe('onlineGameHandlers testing', () => {
     await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [2, 2], to: [0, 3]}, 25)
     await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [3, 0], to: [3, 3]}, 26)
     await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [5, 7], to: [4, 6]}, 27)
-    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
-    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers')
-    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer')
-    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers')
-    await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers')
-    await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer')
+    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 0)
+    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers', 1)
+    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'make-offer', 2)
+    await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers', 3)
+    await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers', 4)
+    await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 5)
     await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [3, 3], to: [6, 6]}, 28)
 
     await expectChessGameStatusOfOnlineGame(whiteClientSocket, 4)
