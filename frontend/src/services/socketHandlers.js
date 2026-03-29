@@ -11,6 +11,9 @@ import { updateErrorState,
   clearErrorState } from '../reducers/errorReducer'
 
 const registerSocketHandlers = socket => {
+  // the following line will run after the initial connection and after every time it reconnects
+  socket.on('connect', () => {socket.emit('user:get-user-state')})
+
   socket.on('user:current-state', (currentUserState) => store.dispatch(updateAllOnlineUserState(currentUserState)))
   socket.on('user:current-game-status', (userOnlineGameStatus) => store.dispatch(updateOnlineUserOnlineGameStatus(userOnlineGameStatus)))
   socket.on('user:new-name', (newUsername) => store.dispatch(updateOnlineUserUsername(newUsername)))
