@@ -2,7 +2,7 @@
 let baseURL
 let socketURL
 
-if (typeof process === 'undefined' || typeof process.env === 'undefined' || typeof process.env.NODE_ENV === 'undefined') {
+if (typeof process.env.NODE_ENV === 'undefined') {
   socketURL = undefined
   baseURL = '/api'
 } else if (process.env.NODE_ENV === 'production') {
