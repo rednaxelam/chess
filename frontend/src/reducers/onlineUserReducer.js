@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { gameJoined } from './sharedActions'
 
 const initialState = null
 
@@ -6,18 +7,25 @@ const onlineUserSlice = createSlice({
   name: 'onlineUser',
   initialState,
   reducers: {
-    updateAllOnlineUserState(state, action) {
-      state = action.payload
+    siteUserStateReceived(state, action) {
+      return action.payload
     },
-    updateOnlineUserUsername(state, action) {
+    newUsername(state, action) {
       state.username = action.payload
     },
-    updateOnlineUserOnlineGameStatus(state, action) {
+    newGameStatus(state, action) {
       state.onlineGameStatus = action.payload
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(gameJoined, (state, action) => {
+        state.onlineGameStatus = 2
+        state.hasOnlineGame = true
+      })
   }
 })
 
-export const { updateAllOnlineUserState, updateOnlineUserUsername, updateOnlineUserOnlineGameStatus } = onlineUserSlice.actions
+export const { siteUserStateReceived, newUsername, newGameStatus } = onlineUserSlice.actions
 
 export default onlineUserSlice.reducer

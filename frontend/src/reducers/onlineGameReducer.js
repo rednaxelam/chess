@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { gameJoined } from './sharedActions'
 
 const initialState = null
 
@@ -6,25 +7,44 @@ const onlineGameSlice = createSlice({
   name: 'onlineGame',
   initialState,
   reducers: {
-    updateAllOnlineGameState(state, action) {
-      state = action.payload
+    onlineGameStateReceived(state, action) {
+      if (!state) return action.payload
+      if (state.gameState.version < action.payload.gameState.version) {
+        state.gameState = action.payload.gameState
+      }
+
+      if (state.drawState.version < action.payload.drawState.version) {
+        state.drawState = action.payload.drawState
+      }
+
+      state.userState = action.payload.userState
     },
-    clearAllOnlineGameState(state, action) {
-      state = null
+    onlineGameStateCleared(state, action) {
+      return null
     },
-    updateGameState(state, action) {
-      state.gameState = action.payload
+    gameStateReceived(state, action) {
+      if (state.gameState.version < action.payload.gameState.version) {
+        state.gameState = action.payload.gameState
+      }
     },
-    updateDrawState(state, action) {
-      state.drawState = action.payload
+    drawStateReceived(state, action) {
+      if (state.drawState.version < action.payload.drawState.version) {
+        state.drawState = action.payload.drawState
+      }
     },
-    updateUserState(state, action) {
+    gameUserStateReceived(state, action) {
       state.userState = action.payload
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(gameJoined, (state, action) => {
+        return action.payload
+      })
   }
 })
 
-export const { updateAllOnlineGameState, clearAllOnlineGameState, updateGameState, updateDrawState, updateUserState } = onlineGameSlice.actions
+export const { onlineGameStateReceived, onlineGameStateCleared, gameStateReceived, drawStateReceived, gameUserStateReceived } = onlineGameSlice.actions
 
 export default onlineGameSlice.reducer
 
