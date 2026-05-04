@@ -9,7 +9,8 @@ const middleware = require('./utils/middleware')
 
 const app = express()
 const server = createServer(app)
-const io = new Server(server)
+const serverOptions = process.env.NODE_ENV === 'dev' ? {cors: {origin: ['http://localhost:5173']}} : {}
+const io = new Server(server, serverOptions)
 
 const { OnlineUsers } = require('./services/OnlineUsers')
 const onlineUsers = new OnlineUsers()
@@ -20,7 +21,10 @@ const { registerUserHandlers } = require('./handlers/userHandlers')
 const { registerMatchmakingQueueHandlers } = require('./handlers/matchmakingQueueHandlers')
 const { registerOnlineGameHandlers } = require('./handlers/onlineGameHandlers')
 
-app.use(cors())
+if (process.env.NODE_ENV === 'dev') {
+  app.use(cors({origin: ['http://localhost:5173']}))
+}
+
 app.use(express.json())
 app.use(middleware.requestLogger)
 
