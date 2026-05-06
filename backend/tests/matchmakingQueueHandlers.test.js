@@ -172,7 +172,7 @@ describe('matchmakingQueueHandlers testing', () => {
     await expectResponseToEmittedEvent(user1ClientSocket, 'queue:join', 'queue:joined')
     await expectResponseToEmittedEvent(user2ClientSocket, 'queue:join', 'game:joined')
 
-    await expectResponseToEmittedEvent(user1ClientSocket, 'game:resign', 'game:game-state-update')
+    await expectResponseToEmittedEvent(user1ClientSocket, 'game:resign', 'game:final-state-update')
 
     await expectResponseToEmittedEvent(user1ClientSocket, 'queue:join', 'queue:joined')
     await expectResponseToEmittedEvent(user2ClientSocket, 'queue:join', 'game:joined')

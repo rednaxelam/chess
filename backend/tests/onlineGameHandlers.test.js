@@ -33,6 +33,23 @@ const expectGameStateUpdatesAfterValidMove = (activePlayerClientSocket, moveInfo
   })
 }
 
+const expectFinalStateUpdatesAfterValidMove = (activePlayerClientSocket, moveInfo, moveCount) => {
+  return new Promise(resolve => {
+    const [resolveWhiteReceivedFinalStateUpdate, whiteReceivedFinalStateUpdate] = makeEventTracker()
+    const [resolveBlackReceivedFinalStateUpdate, blackReceivedFinalStateUpdate] = makeEventTracker()
+    whiteClientSocket.on('game:final-state-update', () => {
+      whiteClientSocket.off()
+      resolveWhiteReceivedFinalStateUpdate()
+    })
+    blackClientSocket.on('game:final-state-update', () => {
+      blackClientSocket.off()
+      resolveBlackReceivedFinalStateUpdate()
+    })
+    activePlayerClientSocket.emit('game:play-move', moveInfo, moveCount)
+    Promise.all([whiteReceivedFinalStateUpdate, blackReceivedFinalStateUpdate]).then(() => resolve())
+  })
+}
+
 // when a game has finished, the game:play-move handler will respond with game:finished as opposed to game:move-failure
 const expectMoveFailureAfterInvalidMove = (clientSocket, moveInfo, moveCount, expectedGameErrCode) => {
   return new Promise(resolve => {
@@ -74,20 +91,20 @@ const expectDrawStateUpdatesAfterDrawEvent = (activePlayerClientSocket, drawEven
 
 const expectGameConclusionAfterDrawEvent = (activePlayerClientSocket, drawEvent, drawStateVersion) => {
   return new Promise(resolve => {
-    const [resolveWhiteReceivedGameStateUpdate, whiteReceivedGameStateUpdate] = makeEventTracker()
-    const [resolveBlackReceivedGameStateUpdate, blackReceivedGameStateUpdate] = makeEventTracker()
-    whiteClientSocket.on('game:game-state-update', (gameState) => {
-      expect(gameState.gameStatus).toBe(12)
+    const [resolveWhiteReceivedFinalStateUpdate, whiteReceivedFinalStateUpdate] = makeEventTracker()
+    const [resolveBlackReceivedFinalStateUpdate, blackReceivedFinalStateUpdate] = makeEventTracker()
+    whiteClientSocket.on('game:final-state-update', (finalState) => {
+      expect(finalState.gameState.gameStatus).toBe(12)
       whiteClientSocket.off()
-      resolveWhiteReceivedGameStateUpdate()
+      resolveWhiteReceivedFinalStateUpdate()
     })
-    blackClientSocket.on('game:game-state-update', (gameState) => {
-      expect(gameState.gameStatus).toBe(12)
+    blackClientSocket.on('game:final-state-update', (finalState) => {
+      expect(finalState.gameState.gameStatus).toBe(12)
       blackClientSocket.off()
-      resolveBlackReceivedGameStateUpdate()
+      resolveBlackReceivedFinalStateUpdate()
     })
     activePlayerClientSocket.emit(`game:draw:${drawEvent}`, drawStateVersion)
-    Promise.all([whiteReceivedGameStateUpdate, blackReceivedGameStateUpdate]).then(() => resolve())
+    Promise.all([whiteReceivedFinalStateUpdate, blackReceivedFinalStateUpdate]).then(() => resolve())
   })
 }
 
@@ -223,7 +240,7 @@ describe('onlineGameHandlers testing', () => {
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
         await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
-        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
+        await expectFinalStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
 
         await new Promise(resolve => {
           whiteClientSocket.on('user:current-game-status', (onlineGameStatus) => {
@@ -316,7 +333,7 @@ describe('onlineGameHandlers testing', () => {
 
         await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'make-offer', 4)
         
-        await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
+        await expectFinalStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
 
         await expectChessGameStatusOfOnlineGame(whiteClientSocket, 4)
       })
@@ -410,20 +427,20 @@ describe('onlineGameHandlers testing', () => {
         await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
 
         await new Promise(resolve => {
-          const [resolveWhiteReceivedGameStateUpdate, whiteReceivedGameStateUpdate] = makeEventTracker()
-          const [resolveBlackReceivedGameStateUpdate, blackReceivedGameStateUpdate] = makeEventTracker()
-          whiteClientSocket.on('game:game-state-update', (gameState) => {
-            expect(gameState.gameStatus).toBe(6)
+          const [resolveWhiteReceivedFinalStateUpdate, whiteReceivedFinalStateUpdate] = makeEventTracker()
+          const [resolveBlackReceivedFinalStateUpdate, blackReceivedFinalStateUpdate] = makeEventTracker()
+          whiteClientSocket.on('game:final-state-update', (finalState) => {
+            expect(finalState.gameState.gameStatus).toBe(6)
             whiteClientSocket.off()
-            resolveWhiteReceivedGameStateUpdate()
+            resolveWhiteReceivedFinalStateUpdate()
           })
-          blackClientSocket.on('game:game-state-update', (gameState) => {
-            expect(gameState.gameStatus).toBe(6)
+          blackClientSocket.on('game:final-state-update', (finalState) => {
+            expect(finalState.gameState.gameStatus).toBe(6)
             blackClientSocket.off()
-            resolveBlackReceivedGameStateUpdate()
+            resolveBlackReceivedFinalStateUpdate()
           })
           blackClientSocket.emit('game:resign')
-          Promise.all([whiteReceivedGameStateUpdate, blackReceivedGameStateUpdate]).then(() => resolve())
+          Promise.all([whiteReceivedFinalStateUpdate, blackReceivedFinalStateUpdate]).then(() => resolve())
         })
       })
     })
@@ -435,7 +452,7 @@ describe('onlineGameHandlers testing', () => {
       await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 6], to: [4, 6]}, 1)
       await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 1], to: [2, 2]}, 2)
       await expectGameStateUpdatesAfterValidMove(blackClientSocket, {from: [6, 5], to: [4, 5]}, 3)
-      await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
+      await expectFinalStateUpdatesAfterValidMove(whiteClientSocket, {from: [0, 3], to: [4, 7]}, 4)
     })
     
     test('it is not possible to change the state of the game...', async () => {
@@ -544,7 +561,7 @@ describe('onlineGameHandlers testing', () => {
     await expectDrawStateUpdatesAfterDrawEvent(blackClientSocket, 'reset-offers', 3)
     await expectDrawStateUpdatesAfterDrawEvent(whiteClientSocket, 'no-offers', 4)
     await expectNoDrawStateChangeAfterDrawEvent(blackClientSocket, 'make-offer', 5)
-    await expectGameStateUpdatesAfterValidMove(whiteClientSocket, {from: [3, 3], to: [6, 6]}, 28)
+    await expectFinalStateUpdatesAfterValidMove(whiteClientSocket, {from: [3, 3], to: [6, 6]}, 28)
 
     await expectChessGameStatusOfOnlineGame(whiteClientSocket, 4)
     await expectChessGameStatusOfOnlineGame(blackClientSocket, 4)

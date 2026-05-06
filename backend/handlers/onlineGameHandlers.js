@@ -16,6 +16,21 @@ const emitDrawStateUpdate = (io, onlineGame) => {
   io.to(`user:${usersInGame.black}`).emit('game:draw-state-update', onlineGame.getCurrentDrawAgreementState())
 }
 
+const emitFinalStateUpdate = (io, onlineGame, onlineUsers) => {
+  const usersInGame = onlineGame.getUsers()
+
+  const whiteUserState = { username: onlineUsers.getOnlineUserState(usersInGame.white).data.username }
+  const blackUserState = { username: onlineUsers.getOnlineUserState(usersInGame.black).data.username }
+  
+  const whiteGameState = onlineGame.getCurrentGameState(usersInGame.white)
+  const blackGameState = onlineGame.getCurrentGameState(usersInGame.black)
+  const drawState = onlineGame.getCurrentDrawAgreementState()
+  const userState = { white: whiteUserState, black: blackUserState}
+
+  io.to(`user:${usersInGame.white}`).emit('game:final-state-update', { gameState: whiteGameState, drawState, userState })
+  io.to(`user:${usersInGame.black}`).emit('game:final-state-update', { gameState: blackGameState, drawState, userState })
+}
+
 const getOnlineGame = (io, userId, onlineUsers) => {
   const resultGetOnlineGame = onlineUsers.getOnlineGame(userId)
 
@@ -38,7 +53,7 @@ const handleGameTermination = (io, socket, onlineUsers, operationName) => {
   if (!onlineGame.gameStateHasChanged()) {
     io.to(`user:${userId}`).emit('game:finished')
   } else {
-    emitGameStateUpdate(io, onlineGame)
+    emitFinalStateUpdate(io, onlineGame, onlineUsers)
     onlineUsers.chessGameHasConcluded(onlineGame)
   }
 
@@ -66,8 +81,12 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
         }
       }
     } else {
-      emitGameStateUpdate(io, onlineGame)
-      if (!onlineGame.isActiveGame()) onlineUsers.chessGameHasConcluded(onlineGame)
+      if (!onlineGame.isActiveGame()) {
+        emitFinalStateUpdate(io, onlineGame, onlineUsers)
+        onlineUsers.chessGameHasConcluded(onlineGame)
+      } else {
+        emitGameStateUpdate(io, onlineGame)
+      }
     }
   }
 
@@ -87,7 +106,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     onlineGame[operationName](userId, drawStateVersion)
 
     if (onlineGame.gameStateHasChanged()) {
-      emitGameStateUpdate(io, onlineGame)
+      emitFinalStateUpdate(io, onlineGame, onlineUsers)
       onlineUsers.chessGameHasConcluded(onlineGame)
       return
     }
