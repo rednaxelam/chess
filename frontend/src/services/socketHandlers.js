@@ -9,7 +9,7 @@ import { siteUserStateReceived,
   newGameStatus, } from '../reducers/onlineUserReducer'
 import { newErrorState,
   errorStateCleared } from '../reducers/errorReducer'
-import { gameJoined } from '../reducers/sharedActions'
+import { gameJoined, gameEnded } from '../reducers/sharedActions'
 import { emitGetUserState, emitGameRecoverState } from '../services/socketEmitters'
 
 const registerSocketHandlers = socket => {
@@ -41,6 +41,7 @@ const registerSocketHandlers = socket => {
   socket.on('queue:failure', (userErrorInfo) => store.dispatch(newErrorState({ type: 'usersError', errorCode: userErrorInfo.usersErrCode })))
 
   socket.on('game:joined', (onlineGameState) => store.dispatch(gameJoined(onlineGameState)))
+  socket.on('game:final-state-update', (onlineGameState) => store.dispatch(gameEnded(onlineGameState)))
   socket.on('game:current-state', (onlineGameState) => store.dispatch(onlineGameStateReceived(onlineGameState)))
   socket.on('game:game-state-update', (gameState) => store.dispatch(gameStateReceived(gameState)))
   socket.on('game:draw-state-update', (drawState) => store.dispatch(drawStateReceived(drawState)))

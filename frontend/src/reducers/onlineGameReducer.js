@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { gameJoined } from './sharedActions'
+import { gameEnded, gameJoined } from './sharedActions'
 
 const initialState = null
 
@@ -39,6 +39,9 @@ const onlineGameSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(gameJoined, (state, action) => {
+        return action.payload
+      })
+      .addCase(gameEnded, (state, action) => {
         return action.payload
       })
   }

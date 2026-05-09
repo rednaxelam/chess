@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { gameJoined } from './sharedActions'
+import { gameEnded, gameJoined } from './sharedActions'
 
 const initialState = null
 
@@ -22,6 +22,9 @@ const onlineUserSlice = createSlice({
       .addCase(gameJoined, (state, action) => {
         state.onlineGameStatus = 2
         state.hasOnlineGame = true
+      })
+      .addCase(gameEnded, (state, action) => {
+        state.onlineGameStatus = 0
       })
   }
 })
