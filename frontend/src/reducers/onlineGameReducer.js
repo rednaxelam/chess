@@ -23,13 +23,13 @@ const onlineGameSlice = createSlice({
       return null
     },
     gameStateReceived(state, action) {
-      if (state.gameState.version < action.payload.gameState.version) {
-        state.gameState = action.payload.gameState
+      if (state.gameState.version < action.payload.version) {
+        state.gameState = action.payload
       }
     },
     drawStateReceived(state, action) {
-      if (state.drawState.version < action.payload.drawState.version) {
-        state.drawState = action.payload.drawState
+      if (state.drawState.version < action.payload.version) {
+        state.drawState = action.payload
       }
     },
     gameUserStateReceived(state, action) {
