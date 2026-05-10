@@ -10,14 +10,14 @@ import { siteUserStateReceived,
 import { newErrorState,
   errorStateCleared } from '../reducers/errorReducer'
 import { gameJoined, gameEnded } from '../reducers/sharedActions'
-import { emitGetUserState, emitGameRecoverState } from '../services/socketEmitters'
+import { emitGetUserState, emitRecoverAllOnlineGameState } from '../services/socketEmitters'
 
 const registerSocketHandlers = socket => {
 
   const getAllCurrentOnlineState = async () => {
     await new Promise(resolve => {
       const emitGameRecoverStateIfHasOnlineGame = (currentUserState) => {
-        if (currentUserState.hasOnlineGame) emitGameRecoverState()
+        if (currentUserState.hasOnlineGame) emitRecoverAllOnlineGameState()
         socket.off('user:current-state', emitGameRecoverStateIfHasOnlineGame)
         resolve()
       }
@@ -26,7 +26,7 @@ const registerSocketHandlers = socket => {
     })
   }
 
-  // the following line will run after the initial connection and after every time it reconnects
+  // the following line will run after the initial connection and after every time the socket reconnects
   socket.on('connect', getAllCurrentOnlineState)
   // the following line is for development
   socket.onAny((event, ...args) => {console.log(`got ${event}`); console.log(`args ${JSON.stringify(args)}`)})

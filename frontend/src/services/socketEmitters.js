@@ -26,6 +26,42 @@ export const emitQueueLeave = () => {
 
 // online game emitters
 
-export const emitGameRecoverState = () => {
+export const emitPlayMove = (moveInfo, version) => {
+  socket.emit('game:play-move', moveInfo, version)
+}
+
+export const emitMakeDrawOffer = (version) => {
+  socket.emit('game:draw:make-offer', version)
+}
+
+export const emitResetDrawOffers = (version) => {
+  socket.emit('game:draw:reset-offers', version)
+}
+
+export const emitNoDrawOffers = (version) => {
+  socket.emit('game:draw:no-offers', version)
+}
+
+export const emitWantDrawOffers = (version) => {
+  socket.emit('game:draw:want-offers', version)
+}
+
+export const emitResign = () => {
+  socket.emit('game:resign')
+}
+
+export const emitRecoverAllOnlineGameState = () => {
   socket.emit('game:recover-state')
+}
+
+export const emitRecoverGameState = () => {
+  socket.emit('game:recover-game-state')
+}
+
+export const emitRecoverDrawState = () => {
+  socket.emit('game:recover-draw-state')
+}
+
+export const emitGetOnlineGameVersionInfo = () => {
+  socket.emit('game:get-version-info')
 }
