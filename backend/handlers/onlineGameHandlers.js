@@ -160,7 +160,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
 
     const gameState = onlineGame.getCurrentGameState(userId)
 
-    io.to(`user:${userId}`).emit('game:current-game-state', { gameState })
+    io.to(`user:${userId}`).emit('game:current-game-state', { ...gameState })
   }
 
   const recoverDrawState = () => {
@@ -171,7 +171,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
 
     const drawState = onlineGame.getCurrentDrawAgreementState()
 
-    io.to(`user:${userId}`).emit('game:current-draw-state', { drawState })
+    io.to(`user:${userId}`).emit('game:current-draw-state', { ...drawState })
   }
 
   const getVersionInfo = () => {
