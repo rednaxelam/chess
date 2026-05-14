@@ -10,7 +10,10 @@ import { siteUserStateReceived,
 import { newErrorState,
   errorStateCleared } from '../reducers/errorReducer'
 import { gameJoined, gameEnded } from '../reducers/sharedActions'
-import { emitGetUserState, emitRecoverAllOnlineGameState } from '../services/socketEmitters'
+import { emitGetUserState,
+  emitRecoverAllOnlineGameState,
+  emitRecoverGameState,
+  emitRecoverDrawState, } from '../services/socketEmitters'
 
 const registerSocketHandlers = socket => {
 
@@ -43,12 +46,18 @@ const registerSocketHandlers = socket => {
   socket.on('game:joined', (onlineGameState) => store.dispatch(gameJoined(onlineGameState)))
   socket.on('game:final-state-update', (onlineGameState) => store.dispatch(gameEnded(onlineGameState)))
   socket.on('game:current-state', (onlineGameState) => store.dispatch(onlineGameStateReceived(onlineGameState)))
+  socket.on('game:current-game-state', (gameState) => store.dispatch(gameStateReceived(gameState)))
+  socket.on('game:current-draw-state', (drawState) => store.dispatch(drawStateReceived(drawState)))
   socket.on('game:game-state-update', (gameState) => store.dispatch(gameStateReceived(gameState)))
   socket.on('game:draw-state-update', (drawState) => store.dispatch(drawStateReceived(drawState)))
   socket.on('game:not-found', () => store.dispatch(newErrorState({ type: 'usersError', errorCode: 4 })))
   socket.on('game:finished', () => store.dispatch(newErrorState({ type: 'gameError', errorCode: 5 })))
   socket.on('game:move-failure', (gameErrorInfo) => store.dispatch(newErrorState({ type: 'gameError', errorCode: gameErrorInfo.gameErrCode })))
   socket.on('game:no-draw-state-change', () => store.dispatch(newErrorState({ type: 'gameError', errorCode: 3 })))
+  socket.on('game:all-state-out-of-sync', emitRecoverAllOnlineGameState)
+  socket.on('game:game-state-out-of-sync', emitRecoverGameState)
+  socket.on('game:draw-state-out-of-sync', emitRecoverDrawState)
+  socket.on('game:is-in-sync', () => {/*do nothing*/})
 }
 
 export default registerSocketHandlers

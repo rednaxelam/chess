@@ -1,4 +1,5 @@
 import socket from '../socket'
+import store from '../store'
 
 // user emitters
 
@@ -62,6 +63,10 @@ export const emitRecoverDrawState = () => {
   socket.emit('game:recover-draw-state')
 }
 
-export const emitGetOnlineGameVersionInfo = () => {
-  socket.emit('game:get-version-info')
+export const emitCheckVersionInfo = () => {
+  const storeSnapshot = store.getState()
+  const gameStateVersion = storeSnapshot.onlineGame.gameState.version
+  const drawStateVersion = storeSnapshot.onlineGame.drawState.version
+  socket.emit('game:check-version-info', { gameState: gameStateVersion, drawState: drawStateVersion })
+
 }
