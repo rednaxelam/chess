@@ -174,15 +174,28 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     io.to(`user:${userId}`).emit('game:current-draw-state', { ...drawState })
   }
 
-  const getVersionInfo = () => {
+  const checkVersionInfo = (clientVersionInfo) => {
     const userId = socket.request.userId
-
+    
+    if (clientVersionInfo === null || typeof clientVersionInfo !== 'object') {
+      io.to(`user:${userId}`).emit('no:thanks')
+    }
     const onlineGame = getOnlineGame(io, userId, onlineUsers)
     if (!onlineGame) return
 
     const versionInfo = onlineGame.getVersionInfo()
+    const gameStateIsInSync = clientVersionInfo.gameState === versionInfo.gameState
+    const drawStateIsInSync = clientVersionInfo.drawState === versionInfo.drawState
 
-    io.to(`user:${userId}`).emit('game:current-version-info', { versionInfo })
+    if (!gameStateIsInSync && !drawStateIsInSync) {
+      io.to(`user:${userId}`).emit('game:all-state-out-of-sync')
+    } else if (!gameStateIsInSync) {
+      io.to(`user:${userId}`).emit('game:game-state-out-of-sync')
+    } else if (!drawStateIsInSync) {
+      io.to(`user:${userId}`).emit('game:draw-state-out-of-sync')
+    } else {
+      io.to(`user:${userId}`).emit('game:is-in-sync')
+    }
   }
 
   socket.on('game:play-move', playMove)
@@ -194,19 +207,21 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   socket.on('game:recover-state', recoverAllOnlineGameState)
   socket.on('game:recover-game-state', recoverGameState)
   socket.on('game:recover-draw-state', recoverDrawState)
-  socket.on('game:get-version-info', getVersionInfo)
+  socket.on('game:check-version-info', checkVersionInfo)
 
   // possible emitted events:
   // game:game-state-update
   // game:draw-state-update
+  // game:final-state-update
   // game:current-state
   // game:current-game-state
   // game:current-draw-state
-  // game:current-version-info
+  // game:is-in-sync
   // (error) game:not-found
   // (error) game:finished 
   // (error) game:move-failure
   // (error) game:no-draw-state-change
+  // (error) game:all-state-out-of-sync
   // (error) game:game-state-out-of-sync
   // (error) game:draw-state-out-of-sync
 }
