@@ -34,7 +34,10 @@ const emitFinalStateUpdate = (io, onlineGame, onlineUsers) => {
 const getOnlineGame = (io, userId, onlineUsers) => {
   const resultGetOnlineGame = onlineUsers.getOnlineGame(userId)
 
-  if (resultGetOnlineGame.statusCode !== 0) {
+  if (resultGetOnlineGame.statusCode === 6) {
+    io.to(`user:${userId}`).emit('user:not-found', {usersErrCode: resultGetOnlineGame.statusCode, errMsg: resultGetOnlineGame.errMsg})
+    return undefined
+  } else if (resultGetOnlineGame.statusCode === 4) {
     io.to(`user:${userId}`).emit('game:not-found', {usersErrCode: resultGetOnlineGame.statusCode, errMsg: resultGetOnlineGame.errMsg})
     return undefined
   } else {
