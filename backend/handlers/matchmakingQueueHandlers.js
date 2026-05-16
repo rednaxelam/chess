@@ -24,7 +24,11 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
         io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState: blackGameState, drawState, userState })
       }
     } else {
-      io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})
+      if (result.statusCode === 6) {
+        io.to(`user:${userId}`).emit('user:not-found', {usersErrCode: result.statusCode, errMsg: result.errMsg})
+      } else {
+        io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})
+      }
     }
   }
 
@@ -35,6 +39,8 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
 
     if (result.statusCode === 0) {
       io.to(`user:${userId}`).emit('queue:left')
+    } else if (result.statusCode === 6) {
+      io.to(`user:${userId}`).emit('user:not-found', {usersErrCode: result.statusCode, errMsg: result.errMsg})
     } else {
       io.to(`user:${userId}`).emit('queue:failure', {usersErrCode: result.statusCode, errMsg: result.errMsg})
     }
