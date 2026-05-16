@@ -79,8 +79,10 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
         const gameErrCode = onlineGame.getGameStateHasNotChangedReasonCode()
         if (gameErrCode === 4) {
           io.to(`user:${userId}`).emit('game:game-state-out-of-sync')
+        } else if (gameErrCode === 0 || gameErrCode === 1) {
+          io.to(`user:${userId}`).emit('game:out-of-turn')
         } else {
-          io.to(`user:${userId}`).emit('game:move-failure', { gameErrCode })
+          io.to(`user:${userId}`).emit('game:invalid-move')
         }
       }
     } else {
@@ -222,7 +224,8 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   // game:is-in-sync
   // (error) game:not-found
   // (error) game:finished 
-  // (error) game:move-failure
+  // (error) game:invalid-move
+  // (error) game:out-of-turn
   // (error) game:no-draw-state-change
   // (error) game:all-state-out-of-sync
   // (error) game:game-state-out-of-sync
