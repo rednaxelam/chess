@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { gameWasNotFound } from './sharedActions'
 
 const initialState = null
 
@@ -12,6 +13,12 @@ const errorSlice = createSlice({
     errorStateCleared(state, action) {
       state = null
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(gameWasNotFound, (state, action) => {
+        return { type: 'usersError', errorCode: 4 }
+      })
   }
 })
 

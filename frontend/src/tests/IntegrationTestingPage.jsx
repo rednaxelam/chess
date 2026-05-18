@@ -17,6 +17,7 @@ import { emitGetUserState,
   emitRecoverGameState,
   emitRecoverDrawState,
   emitCheckVersionInfo,
+  emitResign,
 } from '../services/socketEmitters'
 import { useState } from 'react'
 
@@ -100,6 +101,7 @@ function IntegrationTestingPage() {
       <button onClick={emitRecoverGameState}>emitRecoverGameState</button>
       <button onClick={emitRecoverDrawState}>emitRecoverDrawState</button>
       <button onClick={emitCheckVersionInfo}>emitCheckVersionInfo</button>
+      <button onClick={emitResign}>emitResign</button>
     </>
   )
 }
