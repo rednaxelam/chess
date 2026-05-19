@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { gameEnded, gameJoined, gameWasNotFound } from './sharedActions'
+import { siteUserStateReceived } from './onlineUserReducer'
 
 const initialState = null
 
@@ -46,6 +47,9 @@ const onlineGameSlice = createSlice({
       })
       .addCase(gameWasNotFound, (state, action) => {
         return null
+      })
+      .addCase(siteUserStateReceived, (state, action) => {
+        if (!action.payload.hasOnlineGame) return null
       })
   }
 })
