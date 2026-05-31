@@ -55,7 +55,7 @@ const StyledBoard = styled.div`
 `
 
 
-const CurrentLocalBoard = ({ orientation }) => {
+const ActiveBoard = ({ orientation }) => {
   const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
   const { gameStatus, playerToMoveColor, playerToMoveIsInCheck } = currentGameState
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
@@ -177,4 +177,4 @@ const CurrentLocalBoard = ({ orientation }) => {
 
 }
 
-export default CurrentLocalBoard
+export default ActiveBoard
