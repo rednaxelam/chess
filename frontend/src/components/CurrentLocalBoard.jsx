@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Square from './Square'
 import styled from 'styled-components'
 
@@ -60,6 +60,15 @@ const CurrentLocalBoard = ({ orientation }) => {
   const { gameStatus, playerToMoveColor, playerToMoveIsInCheck } = currentGameState
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
   const [promotionMenuCoords, setPromotionMenuCoords] = useState(null)
+
+  // clean up window listeners on unmount
+  useEffect(() => {
+    return () => {
+      window.onmouseup = null
+      window.onmousedown = null
+      window.onmousemove = null
+    }
+  }, [])
 
   const chessBoardState = getChessBoardState(currentGameState)
 
