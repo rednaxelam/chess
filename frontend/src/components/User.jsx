@@ -5,7 +5,7 @@ import { emitGetNewName } from '../services/socketEmitters'
 
 const StyledUserContents = styled.ul`
   position: absolute;
-  z-index: 99999;
+  z-index: 99;
   border-left: 1px solid rgba(0, 0, 0);
   border-right: 1px solid rgba(0, 0, 0);
   border-bottom: 1px solid rgba(0, 0, 0);
@@ -27,14 +27,13 @@ const StyledUserContents = styled.ul`
 
 const StyledUser = styled.div`
   position: relative;
-  color: black;
-  border: 3px solid rgba(0, 0, 0);
 `
 
 const UserContents = ({ currentUserState, isExpanded }) => {
   if (currentUserState === null || !isExpanded) return null
   else return <StyledUserContents>
     {/* to do: disable the new name option after emitGetNewName and enable it again after receiving a new name */}
+    {/* also disable functionality while in an active online game */}
     <li onClick={emitGetNewName}>New Name? ↻</li>
     <li>Saved Games</li>
   </StyledUserContents>
@@ -43,9 +42,9 @@ const UserContents = ({ currentUserState, isExpanded }) => {
 
 const UserToggle = ({ currentUserState, isExpanded, handleClick }) => {
   if (currentUserState === null) {
-    return <button>
-      make an account!
-    </button>
+    return <em>
+      not signed in
+    </em>
   } else {
     const { onlineGameStatus } = currentUserState
     const onlineGameStatusDescription = onlineGameStatus === 0 ? '(online)' : onlineGameStatus === 1 ? '(in queue)' : '(in game)'
