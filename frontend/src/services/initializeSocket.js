@@ -5,15 +5,21 @@ import { newErrorState } from '../reducers/errorReducer'
 import registerSocketHandlers from './socketHandlers'
 import config from '../utils/config'
 
-const initializeSocket = async () => {
-  const intializationHasFailedFlag = false
+const initializeSocket = async (abortControllerSignal) => {
+  // the abortController argument is optional
+  let intializationHasFailedFlag = false
 
   if (!localStorage.getItem('token')) {
     try {
-      const token = await getGuestUserAccountToken()
+      const token = await getGuestUserAccountToken(abortControllerSignal)
       localStorage.setItem('token', token)
     } catch (error) {
-      store.dispatch(newErrorState({ type: 'serverError', errorCode: 0, msg: 'Server has failed to create a new user' }))
+      intializationHasFailedFlag = true
+      if (error.name === 'CancelledError') {
+        // do nothing
+      } else {
+        store.dispatch(newErrorState({ type: 'serverError', errorCode: 0, msg: 'Server has failed to create a new user' }))
+      }
     }
   }
 

@@ -3,12 +3,23 @@ import config from '../utils/config'
 
 const URL = `${config.baseURL}/guest-users`
 
-const getGuestUserAccountToken = async () => {
+const getGuestUserAccountToken = async (abortControllerSignal) => {
   try {
-    const response = await axios.post(URL)
+    let response
+    if (abortControllerSignal) {
+      response = await axios.post(URL, {}, {
+        signal: abortControllerSignal
+      })
+    } else {
+      response = await axios.post(URL)
+    }
     return response.data.token
   } catch (error) {
-    throw new Error('Guest user account creation was unsuccessful')
+    if (abortControllerSignal && abortControllerSignal.aborted) {
+      error.name = 'CancelledError'
+      throw error
+    }
+    else throw new Error('Guest user account creation was unsuccessful')
   }
 }
 
