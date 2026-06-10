@@ -114,17 +114,13 @@ class PlayerMovementInformation {
   }
 
   getMoveArrayCopy(coords) {
-    const moveArrayCopy = this.#MoveBoard[coords[0]][coords[1]]
+    const moveArray = this.#MoveBoard[coords[0]][coords[1]]
 
-    if (moveArrayCopy === null) {
+    if (moveArray === null) {
       throw new Error('There is no moveArray at the given coordinates')
     }
 
-    for (let i = 0; i < moveArrayCopy.length; i++) {
-      moveArrayCopy[i] = [moveArrayCopy[i][0], moveArrayCopy[i][1]]
-    }
-
-    return moveArrayCopy
+    return moveArray.map(move => [move[0], move[1]])
   }
 
   #findPawnMoves(board, startCoords, color, opponentControlInformation, moveRemovesCheck) {
