@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
-import initializeSocket from '../services/initializeSocket'
-import { emitGetNewName } from '../services/socketEmitters'
+import initializeSocket from '../../services/initializeSocket'
+import { emitGetNewName } from '../../services/socketEmitters'
 
 const GuestAccountModal = ({ isDisplayed, closeModal }) => {
   const dialogRef = useRef(null)
