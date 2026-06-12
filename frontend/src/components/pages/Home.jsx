@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router'
 import initializeSocket from '../../services/initializeSocket'
 import { emitGetNewName } from '../../services/socketEmitters'
 
@@ -59,12 +60,12 @@ const GuestAccountModal = ({ isDisplayed, closeModal }) => {
   }
 }
 
-const PlayOnlineButton = ({ setIsModalOpen }) => {
+const PlayOnlineButton = ({ setIsModalOpen, navigate }) => {
   const userState = useSelector(({ onlineUser }) => onlineUser)
   if (localStorage.getItem('token') && !userState) {
     return <button>establishing connection</button>
   } else if (localStorage.getItem('token')) {
-    return <button>Play Online</button>
+    return <button onClick={() => navigate('/online')}>Play Online</button>
   } else {
     return <button onClick={() => setIsModalOpen(true)}>
       Play Online
@@ -73,11 +74,12 @@ const PlayOnlineButton = ({ setIsModalOpen }) => {
 }
 
 const Home = () => {
+  const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   return <main>
     <h1>Play Chess!</h1>
-    <button>Play Locally</button>
-    <PlayOnlineButton setIsModalOpen={setIsModalOpen} />
+    <button onClick={() => navigate('/local-game')}>Play Locally</button>
+    <PlayOnlineButton setIsModalOpen={setIsModalOpen} navigate={navigate} />
     <GuestAccountModal isDisplayed={isModalOpen} closeModal={() => setIsModalOpen(false)} />
   </main>
 }
