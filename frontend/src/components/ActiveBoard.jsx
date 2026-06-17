@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import Square from './Square'
+import { ActiveBoardContext } from './ActiveBoardContext'
 import styled from 'styled-components'
 
 const getChessBoardState = currentGameState => {
@@ -54,12 +55,11 @@ const StyledBoard = styled.div`
   grid-template-rows: 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%;
 `
 
-
-const ActiveBoard = ({ orientation }) => {
-  const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
+const ChessBoard = ({ orientation, currentGameState }) => {
   const { gameStatus, playerToMoveColor, playerToMoveIsInCheck } = currentGameState
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
   const [promotionMenuCoords, setPromotionMenuCoords] = useState(null)
+  const { mode } = useContext(ActiveBoardContext)
 
   // clean up window listeners on unmount
   useEffect(() => {
@@ -111,7 +111,6 @@ const ActiveBoard = ({ orientation }) => {
   const colorOfWinner = gameStatus < 4 ? undefined : gameStatus >= 12 ? 'na' : gameStatus % 2 === 0 ? 'white' : 'black'
   const colorOfPlayerInCheck = playerToMoveIsInCheck ? playerToMoveColor : 'na'
 
-  console.log('rendering')
   for (let i = orientation === 'white' ? 7 : 0; orientation === 'white' ? i >= 0 : i <= 7; orientation === 'white' ? i-- : i++) {
     alternateBgColor()
     for (let j = orientation === 'white' ? 0 : 7; orientation === 'white' ? j <= 7 : j >= 0; orientation === 'white' ? j++ : j--) {
@@ -124,6 +123,13 @@ const ActiveBoard = ({ orientation }) => {
         if (chessBoardState[i][j]) {
           const { color, type } = chessBoardState[i][j]
           square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfWinner={colorOfWinner} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
+        } else {
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+        }
+      } else if (mode === 'online' && playerToMoveColor !== currentGameState.playerColor) {
+        if (chessBoardState[i][j]) {
+          const { color, type } = chessBoardState[i][j]
+          square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
         } else {
           square = <Square key={i * 8 + j} bgColor={currentBgColor} />
         }
@@ -175,6 +181,39 @@ const ActiveBoard = ({ orientation }) => {
     {squaresToDisplay}
   </StyledBoard>
 
+}
+
+const LocalChessBoard = ({ orientation }) => {
+  if (orientation === 'auto') orientation = 'white'
+
+  const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
+  return <ChessBoard orientation={orientation} currentGameState={currentGameState} />
+}
+
+const OnlineChessBoard = ({ orientation }) => {
+  const currentGameState = useSelector(({ onlineGame }) => onlineGame?.gameState)
+  if (orientation === 'auto') orientation = currentGameState?.playerColor
+
+  if (!currentGameState) {
+    return <p>getting game state...</p>
+  }
+  else {
+    return <ChessBoard orientation={orientation} currentGameState={currentGameState} />
+  }
+}
+
+const ActiveBoard = ({ orientation, mode }) => {
+  if (mode === 'online') {
+    return <ActiveBoardContext value={{ mode }}>
+      <OnlineChessBoard orientation={orientation} />
+    </ActiveBoardContext>
+  } else if (mode === 'local') {
+    return <ActiveBoardContext value={{ mode }}>
+      <LocalChessBoard orientation={orientation} />
+    </ActiveBoardContext>
+  } else {
+    return null
+  }
 }
 
 export default ActiveBoard

@@ -1,8 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import styled from 'styled-components'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useContext } from 'react'
 import { useDispatch } from 'react-redux'
 import { playMove } from '../reducers/localGameReducer'
+import { emitPlayMove } from '../services/socketEmitters'
+import { ActiveBoardContext } from './ActiveBoardContext'
+import store from '../store'
 
 import blackBishop from '../assets/black-bishop.svg'
 import blackKnight from '../assets/black-knight.svg'
@@ -49,6 +52,7 @@ const MenuContainer = styled.div`
 
 const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDraggedPieceInfo, setPromotionMenuCoords }) => {
   const dispatch = useDispatch()
+  const { mode } = useContext(ActiveBoardContext)
   const queenRef = useRef(null)
   const knightRef = useRef(null)
   const rookRef = useRef(null)
@@ -59,7 +63,14 @@ const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDragged
     window.onmousedown = null
     setDraggedPieceInfo(null)
     setPromotionMenuCoords(null)
-    dispatch(playMove({ ...moveInfo, promoteTo: pieceType }))
+    if (mode === 'online') {
+      const version = store.getState().onlineGame.gameState.version
+      emitPlayMove({ ...moveInfo, promoteTo: pieceType }, version)
+    } else if (mode === 'local') {
+      dispatch(playMove({ ...moveInfo, promoteTo: pieceType }))
+    } else {
+      throw new Error(`unexpected mode value '${mode}' for active board context`)
+    }
   }
 
   useEffect(() => {

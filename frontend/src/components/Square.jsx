@@ -1,8 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import styled from 'styled-components'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useContext } from 'react'
 import { useDispatch } from 'react-redux'
 import { playMove } from '../reducers/localGameReducer'
+import { emitPlayMove } from '../services/socketEmitters'
+import { ActiveBoardContext } from './ActiveBoardContext'
+import store from '../store'
 import PromotionDecisionMenu from './PromotionDecisionMenu'
 
 import blackPawn from '../assets/black-pawn.svg'
@@ -81,6 +84,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 
 const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, orientation, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover }) => {
   const dispatch = useDispatch()
+  const { mode } = useContext(ActiveBoardContext)
   const imgRef = useRef(null)
   const squareRef = useRef(null)
   const [imgStyle, setImgStyle] = useState({ position: 'absolute', pointerEvents: 'none' })
@@ -116,7 +120,14 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
           window.onmousemove = null
           event.stopPropagation()
           setDraggedPieceInfo(null)
-          dispatch(playMove(moveInfo))
+          if (mode === 'online') {
+            const version = store.getState().onlineGame.gameState.version
+            emitPlayMove(moveInfo, version)
+          } else if (mode === 'local') {
+            dispatch(playMove(moveInfo))
+          } else {
+            throw new Error(`unexpected mode value '${mode}' for active board context`)
+          }
         }
         squareDom.onmouseup = handleMouseUp
       }
