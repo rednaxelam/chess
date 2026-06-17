@@ -5,7 +5,6 @@ import store from '../store'
 
 const emitDrawEvent = (drawEventEmitter, setExpectedDrawVersion) => {
   const version = store.getState().onlineGame.drawState.version
-  console.log(typeof version)
   drawEventEmitter(version)
   setExpectedDrawVersion(version + 1)
 }
@@ -28,7 +27,7 @@ const DrawStatusText = ({ playerDrawInfo, opponentDrawInfo }) => {
   if (!playerDrawInfo.wantsDrawOffers && !opponentDrawInfo.wantsDrawOffers) {
     return <p>Noone wants draw offers</p>
   } else if (!playerDrawInfo.wantsDrawOffers) {
-    return <p>You don\'t want draw offers</p>
+    return <p>You don't want draw offers</p>
   } else if (!opponentDrawInfo.wantsDrawOffers) {
     return <p>Opponent doesn't want draw offers</p>
   } else if (playerDrawInfo.offersDraw) {
