@@ -75,12 +75,12 @@ const DrawOfferToggle = ({ playerDrawInfo, isInteractivityDisabled, setExpectedD
 }
 
 const OnlineGameDrawMenu = () => {
-  /* concurrent draw events could lead to one being dropped and receiving draw-state-out-of-sync in response */
+  /* concurrent draw events could lead to one being rejected and receiving draw-state-out-of-sync in response */
   /* it might be worth thinking about how this could be indicated to the user at a later time */
   const [expectedDrawVersion, setExpectedDrawVersion] = useState(0)
   const drawInfo = useDrawInfo()
 
-  if (!drawInfo.playerDrawInfo) return <p>loading...</p>
+  if (!drawInfo) return <p>loading...</p>
   if (drawInfo.isGameFinished) return <p>Game Finished, no further draw actions can be taken</p>
 
   const isInteractivityDisabled = drawInfo.version < expectedDrawVersion

@@ -94,7 +94,7 @@ const registerSocketHandlers = socket => {
   // there is no corresponding error code for all state being out of sync with the way that OnlineGame is currently set up
   socket.on('game:all-state-out-of-sync', () => getOnlineGameStateAndDispatchError({ type: 'gameError', errorCode: 100 }))
   socket.on('game:game-state-out-of-sync', () => getGameStateAndDispatchError({ type: 'gameError', errorCode: 4 }))
-  /* concurrent draw events could lead to one being dropped and receiving draw-state-out-of-sync in response */
+  /* concurrent draw events could lead to one being rejected and receiving draw-state-out-of-sync in response */
   /* it might be worth thinking about how this could be indicated to the user at a later time */
   socket.on('game:draw-state-out-of-sync', () => getDrawStateAndDispatchError({ type: 'gameError', errorCode: 6 }))
   socket.on('game:not-found', getUserStateAndDispatchGameWasNotFound)
