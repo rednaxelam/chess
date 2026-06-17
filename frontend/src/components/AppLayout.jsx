@@ -24,7 +24,7 @@ const AppLayout = () => {
 
   useEffect(() => {
     if (isInActiveGame) {
-      navigate('/online-game')
+      navigate('/online/active-game')
     } else if (hasNoToken && currentPathname.includes('/online')) {
       navigate('/')
     }

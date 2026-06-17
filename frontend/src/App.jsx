@@ -3,6 +3,7 @@ import AppLayout from './components/AppLayout'
 import Home from './components/pages/Home'
 import LocalGame from './components/pages/LocalGame'
 import OnlineHome from './components/pages/OnlineHome'
+import OnlineGame from './components/pages/OnlineGame'
 
 
 const router = createBrowserRouter([
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
       { path: '/', element: <Home /> },
       { path: '/local-game', element: <LocalGame /> },
       { path: '/online', element: <OnlineHome /> },
+      { path: '/online/active-game', element: <OnlineGame /> }
     ]
   }
 ])
