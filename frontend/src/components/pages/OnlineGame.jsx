@@ -1,4 +1,4 @@
-import ActiveBoard from '../ActiveBoard'
+import ActiveBoard from '../chess-board/ActiveBoard'
 import OnlineGameDrawMenu from '../OnlineGameDrawMenu'
 
 const OnlineGame = () => {
