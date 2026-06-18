@@ -1,5 +1,5 @@
 import ActiveBoard from '../chess-board/ActiveBoard'
-import OnlineGameDrawMenu from '../OnlineGameDrawMenu'
+import OnlineGameDrawMenu from '../game-ui/OnlineGameDrawMenu'
 
 const OnlineGame = () => {
   return <main>

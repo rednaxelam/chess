@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import { useState } from 'react'
-import { emitMakeDrawOffer, emitResetDrawOffers, emitNoDrawOffers, emitWantDrawOffers } from '../services/socketEmitters'
-import store from '../store'
+import { emitMakeDrawOffer, emitResetDrawOffers, emitNoDrawOffers, emitWantDrawOffers } from '../../services/socketEmitters'
+import store from '../../store'
 
 const emitDrawEvent = (drawEventEmitter, setExpectedDrawVersion) => {
   const version = store.getState().onlineGame.drawState.version
