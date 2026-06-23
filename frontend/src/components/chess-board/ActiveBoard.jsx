@@ -135,17 +135,10 @@ const ChessBoard = ({ orientation, currentGameState }) => {
         alternateBgColorPreviousMove()
       }
       let square
-      if (gameStatus >= 4) {
+      if (gameStatus >= 4 || (mode === 'online' && playerToMoveColor !== currentGameState.playerColor)) {
         if (chessBoardState[i][j]) {
           const { color, type } = chessBoardState[i][j]
           square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfWinner={colorOfWinner} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
-        } else {
-          square = <Square key={i * 8 + j} bgColor={currentBgColor} />
-        }
-      } else if (mode === 'online' && playerToMoveColor !== currentGameState.playerColor) {
-        if (chessBoardState[i][j]) {
-          const { color, type } = chessBoardState[i][j]
-          square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
         } else {
           square = <Square key={i * 8 + j} bgColor={currentBgColor} />
         }
