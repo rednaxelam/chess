@@ -59,6 +59,7 @@ const ChessBoard = ({ orientation, currentGameState }) => {
   const { gameStatus, playerToMoveColor, playerToMoveIsInCheck } = currentGameState
   const [draggedPieceInfo, setDraggedPieceInfo] = useState(null)
   const [promotionMenuCoords, setPromotionMenuCoords] = useState(null)
+  const [awaitedUpdateChanges, setAwaitedUpdateChanges] = useState(null)
   const { mode } = useContext(ActiveBoardContext)
 
   // clean up window listeners on unmount
@@ -69,6 +70,14 @@ const ChessBoard = ({ orientation, currentGameState }) => {
       window.onmousemove = null
     }
   }, [])
+
+  useEffect(() => {
+    if (mode === 'online' && awaitedUpdateChanges) {
+      if (currentGameState.version >= awaitedUpdateChanges.version) {
+        setAwaitedUpdateChanges(null)
+      }
+    }
+  }, [currentGameState, awaitedUpdateChanges, mode])
 
   const chessBoardState = getChessBoardState(currentGameState)
 
@@ -94,7 +103,14 @@ const ChessBoard = ({ orientation, currentGameState }) => {
     if (currentBgColor === lightBgColor) currentBgColor = lightBgColorPreviousMove
     else currentBgColor = darkBgColorPreviousMove
   }
-  const [previousMoveFromCoords, previousMoveToCoords] = getPreviousMoveCoords(currentGameState)
+
+  let previousMoveFromCoords, previousMoveToCoords
+  if (awaitedUpdateChanges) {
+    previousMoveFromCoords = awaitedUpdateChanges.from
+    previousMoveToCoords = awaitedUpdateChanges.to
+  } else {
+    [previousMoveFromCoords, previousMoveToCoords] = getPreviousMoveCoords(currentGameState)
+  }
 
   let draggedPieceCanMoveToSquare
   let draggedPieceCoords
@@ -133,9 +149,22 @@ const ChessBoard = ({ orientation, currentGameState }) => {
         } else {
           square = <Square key={i * 8 + j} bgColor={currentBgColor} />
         }
+      } else if (awaitedUpdateChanges) {
+        if (awaitedUpdateChanges.from[0] === i && awaitedUpdateChanges.from[1] === j) {
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+        } else if (awaitedUpdateChanges.to[0] === i && awaitedUpdateChanges.to[1] === j) {
+          const color = awaitedUpdateChanges.pieceColor
+          const type = awaitedUpdateChanges.pieceType
+          square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck} isAwaited={true}/>
+        } else if (chessBoardState[i][j]) {
+          const { color, type } = chessBoardState[i][j]
+          square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
+        } else {
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} />
+        }
       } else if (promotionMenuCoords) {
         if (promotionMenuCoords[0] === i && promotionMenuCoords[1] === j) {
-          square = <Square key={i * 8 + j} bgColor={currentBgColor} displayPromotionMenu={true} orientation={orientation} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} />
+          square = <Square key={i * 8 + j} bgColor={currentBgColor} displayPromotionMenu={true} orientation={orientation} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} setAwaitedUpdateChanges={setAwaitedUpdateChanges}/>
         } else if (chessBoardState[i][j] && !(draggedPieceCoords[0] === i && draggedPieceCoords[1] === j)) {
           const { color, type } = chessBoardState[i][j]
           square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck}/>
@@ -149,14 +178,14 @@ const ChessBoard = ({ orientation, currentGameState }) => {
             square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} pieceIsBeingDragged={true} colorOfPlayerInCheck={colorOfPlayerInCheck} highlightOnHover={true} />
           } else {
             if (draggedPieceCanMoveToSquare([i, j])) {
-              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} />
+              square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} setAwaitedUpdateChanges={setAwaitedUpdateChanges}/>
             } else {
               square = <Square key={i * 8 + j} pieceColor={color} pieceType={type} bgColor={currentBgColor} colorOfPlayerInCheck={colorOfPlayerInCheck} highlightOnHover={true} />
             }
           }
         } else {
           if (draggedPieceCanMoveToSquare([i, j])) {
-            square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} />
+            square = <Square key={i * 8 + j} bgColor={currentBgColor} moveInfo={{ from: draggedPieceCoords, to: [i, j], pieceType: draggedPieceType, pieceColor: playerToMoveColor }} setDraggedPieceInfo={setDraggedPieceInfo} setPromotionMenuCoords={setPromotionMenuCoords} highlightOnHover={true} setAwaitedUpdateChanges={setAwaitedUpdateChanges}/>
           } else {
             square = <Square key={i * 8 + j} bgColor={currentBgColor} highlightOnHover={true} />
           }

@@ -50,7 +50,7 @@ const MenuContainer = styled.div`
 
 `
 
-const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDraggedPieceInfo, setPromotionMenuCoords }) => {
+const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDraggedPieceInfo, setPromotionMenuCoords, setAwaitedUpdateChanges }) => {
   const dispatch = useDispatch()
   const { mode } = useContext(ActiveBoardContext)
   const queenRef = useRef(null)
@@ -65,6 +65,7 @@ const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDragged
     setPromotionMenuCoords(null)
     if (mode === 'online') {
       const version = store.getState().onlineGame.gameState.version
+      setAwaitedUpdateChanges({ ...moveInfo, pieceType, version: version + 1 })
       emitPlayMove({ ...moveInfo, promoteTo: pieceType }, version)
     } else if (mode === 'local') {
       dispatch(playMove({ ...moveInfo, promoteTo: pieceType }))

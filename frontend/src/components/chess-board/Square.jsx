@@ -82,7 +82,7 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 }
 
 
-const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, orientation, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover }) => {
+const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, orientation, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover, setAwaitedUpdateChanges, isAwaited }) => {
   const dispatch = useDispatch()
   const { mode } = useContext(ActiveBoardContext)
   const imgRef = useRef(null)
@@ -122,6 +122,7 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
           setDraggedPieceInfo(null)
           if (mode === 'online') {
             const version = store.getState().onlineGame.gameState.version
+            setAwaitedUpdateChanges({ ...moveInfo, version: version + 1 })
             emitPlayMove(moveInfo, version)
           } else if (mode === 'local') {
             dispatch(playMove(moveInfo))
@@ -141,7 +142,7 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
       src={getPieceSVGSource(pieceColor, pieceType)}
       alt={pieceColor + ' ' + pieceType}
       ref={imgRef}
-      style={imgStyle}
+      style={isAwaited ? { ...imgStyle, opacity: 0.5 } : imgStyle}
       draggable={false}
       className='square-contents'/>
   }
@@ -179,7 +180,8 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
         : moveInfo.pieceColor === 'white' ? 'bottom' : 'top'}
       moveInfo={moveInfo}
       setDraggedPieceInfo={setDraggedPieceInfo}
-      setPromotionMenuCoords={setPromotionMenuCoords}/>
+      setPromotionMenuCoords={setPromotionMenuCoords}
+      setAwaitedUpdateChanges={setAwaitedUpdateChanges}/>
   } else if (pieceType && pieceColor) {
     squareContents = <>
       {pieceImgElement(pieceColor, pieceType, imgRef, imgStyle)}
