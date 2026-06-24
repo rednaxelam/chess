@@ -6,28 +6,7 @@ import { playMove } from '../../reducers/localGameReducer'
 import { emitPlayMove } from '../../services/socketEmitters'
 import { ActiveBoardContext } from './ActiveBoardContext'
 import store from '../../store'
-
-import blackBishop from '../../assets/black-bishop.svg'
-import blackKnight from '../../assets/black-knight.svg'
-import blackRook from '../../assets/black-rook.svg'
-import blackQueen from '../../assets/black-queen.svg'
-import whiteBishop from '../../assets/white-bishop.svg'
-import whiteKnight from '../../assets/white-knight.svg'
-import whiteRook from '../../assets/white-rook.svg'
-import whiteQueen from '../../assets/white-queen.svg'
-
-const pieceSVGDictionary = {
-  'black-bishop': blackBishop,
-  'black-knight': blackKnight,
-  'black-rook': blackRook,
-  'black-queen': blackQueen,
-  'white-bishop': whiteBishop,
-  'white-knight': whiteKnight,
-  'white-rook': whiteRook,
-  'white-queen': whiteQueen,
-}
-
-const getPieceSVGSource = (pieceColor, pieceType) => pieceSVGDictionary[pieceColor + '-' + pieceType]
+import getPieceSVGSource from '../../assets/getPieceSVGSource'
 
 const MenuContainer = styled.div`
   position: absolute;
