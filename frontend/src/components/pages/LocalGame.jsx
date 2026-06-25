@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import ActiveBoard from '../chess-board/ActiveBoard'
+import PlayerInfo from '../game-ui/PlayerInfo'
 import { endAsDrawViaAgreement, whiteResigns, blackResigns, reset } from '../../reducers/localGameReducer'
 import gameStatusCodeDescriptions from '../../utils/gameStatusCodeDescriptions'
 
@@ -22,8 +23,13 @@ const LocalGame = () => {
     <button onClick={() => dispatch(whiteResigns())}>White Resigns</button>
     <button onClick={() => dispatch(blackResigns())}>Black Resigns</button>
     <button onClick={() => dispatch(reset())}>{currentGameStatus < 4 ? 'Reset' : 'New Game'}</button>
+    <br />
+    <PlayerInfo color={orientation === 'white' ? 'black' : 'white'} mode={'local'} />
+    <br />
     <ActiveBoard orientation={orientation} mode={'local'} />
-    <Result currentGameStatus={currentGameStatus}/>
+    <Result currentGameStatus={currentGameStatus} />
+    <br />
+    <PlayerInfo color={orientation} mode={'local'} />
   </main>
 }
 
