@@ -9,7 +9,10 @@ class ChessGame {
   #playerMovementInformation
   #gameStatus = 0
   #color = 'white'
-  #moveHistory = []
+  #gameHistory = {
+    moveHistory: [],
+    gameOutcome: null
+  }
   #fiftyMoveRuleCounter = 0
   #whitePositionHistory = []
   #blackPositionHistory = []
@@ -54,6 +57,7 @@ class ChessGame {
       }
     }
 
+    let algebraicNotation = this.#getAlgebraicNotationOfMove(from, to, promoteTo)
     this.#resetAllStatusEffects()
 
     if (piece.getType() === 'pawn') {
@@ -72,8 +76,6 @@ class ChessGame {
       }
     }
 
-    this.#moveHistory.push([[from[0], from[1]], [to[0], to[1]]])
-
     const opponentControlInformation = new OpponentControlInformation(this.#board, this.#color)
     this.#playerMovementInformation = new PlayerMovementInformation(this.#board, opponentControlInformation)
     this.#color = this.#color === 'white' ? 'black' : 'white'
@@ -81,28 +83,36 @@ class ChessGame {
 
     if (!this.#playerMovementInformation.hasValidMoves()) {
       if (this.#playerKingIsInCheck) {
-        this.#gameStatus = this.#color === 'white' ? 5 : 4
+        this.#endGameWithFinalGameStatus(this.#color === 'white' ? 5 : 4)
+        this.#addMoveToMoveHistory(from, to, algebraicNotation)
         return
       } else {
-        this.#gameStatus = 13
+        this.#endGameWithFinalGameStatus(13)
+        this.#addMoveToMoveHistory(from, to, algebraicNotation)
         return
       }
     }
 
     this.#addAndComparePositionToPositionHistory(piece, from, to)
-    if (!this.isActiveGame()) return
+    if (!this.isActiveGame()) {
+      this.#addMoveToMoveHistory(from, to, algebraicNotation)
+      return
+    }
 
     if (this.#fiftyMoveRuleCounter === 100) {
-      this.#gameStatus = 14
+      this.#endGameWithFinalGameStatus(14)
+      this.#addMoveToMoveHistory(from, to, algebraicNotation)
       return
     }
 
     if (this.#bothPlayersHaveInsufficientMaterial()) {
-      this.#gameStatus = 16
+      this.#endGameWithFinalGameStatus(16)
+      this.#addMoveToMoveHistory(from, to, algebraicNotation)
       return
     }
 
     this.#gameStatus = this.#color === 'white' ? 0 : 1
+    this.#addMoveToMoveHistory(from, to, algebraicNotation)
   }
 
   isActiveGame() {
@@ -166,6 +176,7 @@ class ChessGame {
 
     const whitePieceList = this.#board.getWhitePieceListIterable()
     const blackPieceList = this.#board.getBlackPieceListIterable()
+    const moveHistoryCopy = this.#gameHistory.moveHistory.reduce((historyCopy, move) => {historyCopy.push(move); return historyCopy}, [])
 
     const currentGameStateRepresentation = {
       gameStatus: this.#gameStatus,
@@ -173,7 +184,7 @@ class ChessGame {
       playerToMoveIsInCheck: this.#playerKingIsInCheck,
       whitePieceInfo: getPieceInfo(whitePieceList, this.#color === 'white'),
       blackPieceInfo: getPieceInfo(blackPieceList, this.#color === 'black'),
-      moveHistory: this.#moveHistory.reduce((historyCopy, move) => {historyCopy.push(move); return historyCopy}, []),
+      gameHistory: { moveHistory: moveHistoryCopy, gameOutcome: this.#gameHistory.gameOutcome },
     }
 
     return currentGameStateRepresentation
@@ -182,22 +193,22 @@ class ChessGame {
   whiteResigns() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 7
+    this.#endGameWithFinalGameStatus(7)
   }
 
   blackResigns() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 6
+    this.#endGameWithFinalGameStatus(6)
   }
 
   whiteTimeout() {
     if (!this.isActiveGame()) return
 
     if (this.#playerHasInsufficientMaterialAfterTimeout('black')) {
-      this.#gameStatus = 17
+      this.#endGameWithFinalGameStatus(17)
     } else {
-      this.#gameStatus = 9
+      this.#endGameWithFinalGameStatus(9)
     }
   }
 
@@ -205,9 +216,9 @@ class ChessGame {
     if (!this.isActiveGame()) return
 
     if (this.#playerHasInsufficientMaterialAfterTimeout('white')) {
-      this.#gameStatus = 17
+      this.#endGameWithFinalGameStatus(17)
     } else {
-      this.#gameStatus = 8
+      this.#endGameWithFinalGameStatus(8)
     }
 
   }
@@ -215,20 +226,31 @@ class ChessGame {
   whiteAbandonsGame() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 11
+    this.#endGameWithFinalGameStatus(11)
   }
 
   blackAbandonsGame() {
     if (!this.isActiveGame()) return
 
 
-    this.#gameStatus = 10
+    this.#endGameWithFinalGameStatus(10)
   }
 
   drawViaAgreement() {
     if (!this.isActiveGame()) return
 
-    this.#gameStatus = 12
+    this.#endGameWithFinalGameStatus(12)
+  }
+
+  #endGameWithFinalGameStatus(gameStatusValue) {
+    if (!Number.isInteger(gameStatusValue) || gameStatusValue < 3 || gameStatusValue > 17) {
+      throw new Error('Invalid final game status provided as argument')
+    } else if (this.#gameStatus >= 4 && this.#gameStatus <= 17) {
+      throw new Error('Attempted to end game that has already ended')
+    } else {
+      this.#gameStatus = gameStatusValue
+      this.#gameHistory.gameOutcome = gameStatusValue
+    }
   }
 
   #resetAllStatusEffects() {
@@ -428,7 +450,7 @@ class ChessGame {
         positionHasAppearedBefore = true
         oldPiecePosition.count += 1
         if (oldPiecePosition.count === 3) {
-          this.#gameStatus = 15
+          this.#endGameWithFinalGameStatus(15)
           return
         }
         break
@@ -438,6 +460,147 @@ class ChessGame {
     if (!positionHasAppearedBefore) {
       positionHistory.push(currentPiecePosition)
     }
+  }
+
+  #addMoveToMoveHistory(from, to, algebraicNotation) {
+    // this method needs to be used after the move has been made with the board and after post move updates have been made
+
+    const pieceSymbolDictionary = {
+      'white-pawn': 'p',
+      'white-knight': 'n',
+      'white-bishop': 'b',
+      'white-rook': 'r',
+      'white-queen': 'q',
+      'white-king': 'k',
+      'black-pawn': 'P',
+      'black-knight': 'N',
+      'black-bishop': 'B',
+      'black-rook': 'R',
+      'black-queen': 'Q',
+      'black-king': 'K',
+    }
+
+    const rowStringArray = []
+    for (let i = 0; i <= 7; i++) {
+      const rowArray = []
+      let emptySquareCounter = 0
+      for (let j = 0; j <= 7; j++) {
+        if (this.#board.isEmptySquare([i, j])) emptySquareCounter++
+        else {
+          if (emptySquareCounter !== 0) {rowArray.push(emptySquareCounter); emptySquareCounter = 0}
+
+          const piece = this.#board.getPiece([i, j])
+          rowArray.push(pieceSymbolDictionary[`${piece.getColor()}-${piece.getType()}`])
+        }
+      }
+      if (emptySquareCounter !== 0) rowArray.push(emptySquareCounter)
+      rowStringArray.push(rowArray.join(''))
+    }
+
+    const colorToMoveChar = this.#color.charAt(0)
+    const kingInCheckChar = this.#playerKingIsInCheck.toString().charAt(0)
+    const moveCoordsString = `${from[0]}${from[1]},${to[0]}${to[1]}`
+    const piecePlacementString = rowStringArray.join('/')
+
+    if (this.#gameStatus === 4 || this.#gameStatus === 5) algebraicNotation += '#'
+    else if (this.#playerKingIsInCheck) algebraicNotation += '+'
+
+    this.#gameHistory.moveHistory.push(`${moveCoordsString} ${algebraicNotation} ${colorToMoveChar} ${kingInCheckChar} ${piecePlacementString}`)
+  }
+
+  #getAlgebraicNotationOfMove(from, to, promoteTo) {
+    // this method needs to be used prior to the move being made with the underlying board
+    // check/checkmate status needs to be added to the returned string when they have been determined
+    const getDisambiguationInfo = (pieceToMove, pieceToMoveFrom, pieceToMoveTo) => {
+      const disambiguationInfo = {
+        isDisambiguationNeeded: false,
+        isFileShared: false,
+        isRankShared: false
+      }
+      const playerPieceList = this.#color === 'white' ? this.#board.getWhitePieceListIterable() : this.#board.getBlackPieceListIterable()
+
+      let continueFlag = true
+
+      while (continueFlag) {
+        const pieceElement = playerPieceList.popCurrentPieceElement()
+        const piece = pieceElement.piece
+        const pieceCoords = pieceElement.coords
+
+        if (piece.getType() === pieceToMove.getType()
+            && piece.getId() !== pieceToMove.getId()
+            && this.#playerMovementInformation.isValidMove(pieceCoords, pieceToMoveTo)) {
+
+          disambiguationInfo.isDisambiguationNeeded = true
+
+          if (pieceCoords[1] === pieceToMoveFrom[1]) {
+            disambiguationInfo.isFileShared = true
+          } else if (pieceCoords[0] === pieceToMoveFrom[0] ) {
+            disambiguationInfo.isRankShared = true
+          }
+        }
+
+        continueFlag = playerPieceList.hasNextPieceElement()
+      }
+
+      return disambiguationInfo
+    }
+
+    const typeCharDictionary = {
+      pawn: '',
+      knight: 'N',
+      bishop: 'B',
+      rook: 'R',
+      queen: 'Q',
+      king: 'K'
+    }
+
+    const fileArray = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const rankArray = [1, 2, 3, 4, 5, 6, 7, 8]
+
+    const playerPiece = this.#board.getPiece(from)
+    const playerPieceType = playerPiece.getType()
+    const opponentPieceType = this.#board.isEmptySquare(to) ? null : this.#board.getPiece(to).getType()
+
+    let algebraicNotation = ''
+
+    if (playerPieceType === 'pawn') {
+      if (from[1] !== to[1]) {
+        algebraicNotation = `${fileArray[from[1]]}x${fileArray[to[1]]}${rankArray[to[0]]}`
+        if (!opponentPieceType) algebraicNotation += ' e.p.'
+      } else {
+        algebraicNotation = `${fileArray[to[1]]}${rankArray[to[0]]}`
+      }
+
+      const pawnIsAtBackRank = this.#color === 'white' ? to[0] === 7 : to[0] === 0
+      if (promoteTo && pawnIsAtBackRank) algebraicNotation += `=${typeCharDictionary[promoteTo]}`
+    } else if (playerPieceType === 'king') {
+      if (Math.abs(to[1] - from[1]) === 2) {
+        const isQueensideCastle = to[1] - from[1] === -2
+        if (isQueensideCastle) algebraicNotation = 'O-O-O'
+        else algebraicNotation = 'O-O'
+      }
+      else if (!opponentPieceType) algebraicNotation = `K${fileArray[to[1]]}${rankArray[to[0]]}`
+      else algebraicNotation = `Kx${fileArray[to[1]]}${rankArray[to[0]]}`
+    } else {
+      algebraicNotation = `${typeCharDictionary[playerPieceType]}`
+
+      const disambiguationInfo = getDisambiguationInfo(playerPiece, from, to)
+      if (disambiguationInfo.isDisambiguationNeeded) {
+        if (disambiguationInfo.isFileShared && disambiguationInfo.isRankShared) {
+          algebraicNotation += `${fileArray[from[1]]}${rankArray[from[0]]}`
+        } else if (disambiguationInfo.isFileShared) {
+          algebraicNotation += `${rankArray[from[0]]}`
+        } else {
+          algebraicNotation += `${fileArray[from[1]]}`
+        }
+      }
+
+      if (opponentPieceType) algebraicNotation += 'x'
+
+      algebraicNotation += `${fileArray[to[1]]}${rankArray[to[0]]}`
+    }
+
+    return algebraicNotation
   }
 
   #isPositionWithPossibleEnPassant(piece, to) {

@@ -504,7 +504,7 @@ describe('onlineGameHandlers testing', () => {
           expect(onlineGameInfo.gameState.gameStatus).toBe(4)
           expect(onlineGameInfo.gameState.playerColor).toBe('white')
           expect(onlineGameInfo.gameState.whitePieceInfo[0].type).toBe('pawn')
-          expect(onlineGameInfo.gameState.moveHistory).toHaveLength(5)
+          expect(onlineGameInfo.gameState.gameHistory.moveHistory).toHaveLength(5)
           expect(onlineGameInfo.drawState.white.offersDraw).toBe(false)
           expect((typeof onlineGameInfo.userState.white.username === 'string')).toBe(true)
           whiteClientSocket.off()

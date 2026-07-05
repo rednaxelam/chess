@@ -29,9 +29,10 @@ const getChessBoardState = currentGameState => {
 }
 
 const getPreviousMoveCoords = currentGameState => {
-  const { moveHistory } = currentGameState
+  const { moveHistory } = currentGameState.gameHistory
   if (moveHistory.length === 0) return [[-1, -1], [-1, -1]]
-  else return moveHistory[moveHistory.length - 1]
+  const moveCoordsString = moveHistory[moveHistory.length - 1].substring(0, 5)
+  return moveCoordsString.split(',').map(coordPairStr => coordPairStr.split('').map(coordStr => Number(coordStr)))
 }
 
 const isCoordsEqual = (coords1, coords2) => {
