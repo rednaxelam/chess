@@ -2,6 +2,7 @@ import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit'
 import localGameReducer from './reducers/localGameReducer'
 import onlineGameReducer from './reducers/onlineGameReducer'
 import onlineUserReducer from './reducers/onlineUserReducer'
+import moveHistoryReducer from './reducers/moveHistoryReducer'
 import errorReducer from './reducers/errorReducer'
 
 import { registerMoveHistoryListeners } from './reducers/moveHistoryReducer'
@@ -15,7 +16,8 @@ const store = configureStore({
     localGame: localGameReducer,
     onlineGame: onlineGameReducer,
     onlineUser: onlineUserReducer,
-    error: errorReducer
+    moveHistory: moveHistoryReducer,
+    error: errorReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
