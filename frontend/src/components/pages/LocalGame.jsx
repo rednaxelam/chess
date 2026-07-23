@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import ActiveBoard from '../chess-board/ActiveBoard'
 import PlayerInfo from '../game-ui/PlayerInfo'
+import MoveHistory from '../game-ui/MoveHistory'
 import { endAsDrawViaAgreement, whiteResigns, blackResigns, reset } from '../../reducers/localGameReducer'
 import gameStatusCodeDescriptions from '../../utils/gameStatusCodeDescriptions'
 
@@ -30,6 +31,8 @@ const LocalGame = () => {
     <Result currentGameStatus={currentGameStatus} />
     <br />
     <PlayerInfo color={orientation} mode={'local'} />
+    <br />
+    <MoveHistory mode={'local'} />
   </main>
 }
 
