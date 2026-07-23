@@ -40,7 +40,8 @@ export const registerMoveHistoryListeners = (listenerMiddleware) => {
   listenerMiddleware.startListening({
     actionCreator: onlineGameStateReceived,
     effect: (action, listenerApi) => {
-      const savedVersion = listenerApi.getOriginalState().onlineGame.gameState.version
+      const savedVersion = listenerApi.getOriginalState().onlineGame?.gameState.version
+      if (!savedVersion) return
       const receivedVersion = action.payload.gameState.version
       if (receivedVersion > savedVersion) listenerApi.dispatch(displayActiveOnlineBoard())
     }
@@ -49,7 +50,8 @@ export const registerMoveHistoryListeners = (listenerMiddleware) => {
   listenerMiddleware.startListening({
     actionCreator: gameStateReceived,
     effect: (action, listenerApi) => {
-      const savedVersion = listenerApi.getOriginalState().onlineGame.gameState.version
+      const savedVersion = listenerApi.getOriginalState().onlineGame?.gameState.version
+      if (!savedVersion) return
       const receivedVersion = action.payload.version
       if (receivedVersion > savedVersion) listenerApi.dispatch(displayActiveOnlineBoard())
     }
