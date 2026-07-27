@@ -207,17 +207,23 @@ const ChessBoard = ({ orientation, currentGameState }) => {
 }
 
 const LocalChessBoard = ({ orientation }) => {
+  const localPly = useSelector(({ moveHistory }) => moveHistory.localPly)
+  const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
+
   if (orientation === 'auto') orientation = 'white'
 
-  const currentGameState = useSelector(({ localGame }) => localGame.currentGameState)
-  return <ChessBoard orientation={orientation} currentGameState={currentGameState} />
+  if (localPly !== null) return null
+  else return <ChessBoard orientation={orientation} currentGameState={currentGameState} />
 }
 
 const OnlineChessBoard = ({ orientation }) => {
   const currentGameState = useSelector(({ onlineGame }) => onlineGame?.gameState)
+  const onlinePly = useSelector(({ moveHistory }) => moveHistory.onlinePly)
+
   if (orientation === 'auto') orientation = currentGameState?.playerColor
 
-  if (!currentGameState) {
+  if (onlinePly !== null) return null
+  else if (!currentGameState) {
     return <p>getting game state...</p>
   }
   else {
