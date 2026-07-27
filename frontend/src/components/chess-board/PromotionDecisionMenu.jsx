@@ -31,7 +31,8 @@ const MenuContainer = styled.div`
 
 const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDraggedPieceInfo, setPromotionMenuCoords, setAwaitedUpdateChanges }) => {
   const dispatch = useDispatch()
-  const { mode } = useContext(ActiveBoardContext)
+  const activeBoardSettings = useContext(ActiveBoardContext)
+  const mode = activeBoardSettings && (activeBoardSettings.mode === 'online' || activeBoardSettings.mode === 'local') ? activeBoardSettings.mode : 'na'
   const queenRef = useRef(null)
   const knightRef = useRef(null)
   const rookRef = useRef(null)
@@ -48,8 +49,6 @@ const PromotionDecisionMenu = ({ pieceColor, moveInfo, boardPosition, setDragged
       emitPlayMove({ ...moveInfo, promoteTo: pieceType }, version)
     } else if (mode === 'local') {
       dispatch(playMove({ ...moveInfo, promoteTo: pieceType }))
-    } else {
-      throw new Error(`unexpected mode value '${mode}' for active board context`)
     }
   }
 

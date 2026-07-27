@@ -54,7 +54,8 @@ const dragPiece = (event, startX, startY, imgWidth, imgHeight, setImgStyle) => {
 
 const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPromotionMenu, orientation, moveInfo, colorOfWinner, handleMouseDown, setDraggedPieceInfo, setPromotionMenuCoords, colorOfPlayerInCheck, highlightOnHover, setAwaitedUpdateChanges, isAwaited }) => {
   const dispatch = useDispatch()
-  const { mode } = useContext(ActiveBoardContext)
+  const activeBoardSettings = useContext(ActiveBoardContext)
+  const mode = activeBoardSettings && (activeBoardSettings.mode === 'online' || activeBoardSettings.mode === 'local') ? activeBoardSettings.mode : 'na'
   const imgRef = useRef(null)
   const squareRef = useRef(null)
   const [imgStyle, setImgStyle] = useState({ position: 'absolute', pointerEvents: 'none' })
@@ -96,8 +97,6 @@ const Square = ({ bgColor, pieceColor, pieceType, pieceIsBeingDragged, displayPr
             emitPlayMove(moveInfo, version)
           } else if (mode === 'local') {
             dispatch(playMove(moveInfo))
-          } else {
-            throw new Error(`unexpected mode value '${mode}' for active board context`)
           }
         }
         squareDom.onmouseup = handleMouseUp
