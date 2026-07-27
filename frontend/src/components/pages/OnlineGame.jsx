@@ -1,4 +1,5 @@
 import ActiveBoard from '../chess-board/ActiveBoard'
+import HistoricalBoard from '../chess-board/HistoricalBoard'
 import OnlineGameDrawMenu from '../game-ui/OnlineGameDrawMenu'
 import OnlineGameResignationControl from '../game-ui/OnlineGameResignationControl'
 import PlayerInfo from '../game-ui/PlayerInfo'
@@ -13,6 +14,7 @@ const OnlineGame = () => {
     <PlayerInfo color={playerColor === 'white' ? 'black' : 'white'} mode={'online'} />
     <br />
     <ActiveBoard orientation={'auto'} mode={'online'} />
+    <HistoricalBoard orientation={'auto'} mode={'online'} />
     <br />
     <PlayerInfo color={playerColor} mode={'online'} />
     <br />

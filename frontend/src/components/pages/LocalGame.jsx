@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import ActiveBoard from '../chess-board/ActiveBoard'
+import HistoricalBoard from '../chess-board/HistoricalBoard'
 import PlayerInfo from '../game-ui/PlayerInfo'
 import MoveHistory from '../game-ui/MoveHistory'
 import { endAsDrawViaAgreement, whiteResigns, blackResigns, reset } from '../../reducers/localGameReducer'
@@ -28,6 +29,7 @@ const LocalGame = () => {
     <PlayerInfo color={orientation === 'white' ? 'black' : 'white'} mode={'local'} />
     <br />
     <ActiveBoard orientation={orientation} mode={'local'} />
+    <HistoricalBoard orientation={orientation} mode={'local'} />
     <Result currentGameStatus={currentGameStatus} />
     <br />
     <PlayerInfo color={orientation} mode={'local'} />
