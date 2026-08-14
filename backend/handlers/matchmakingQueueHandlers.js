@@ -19,9 +19,10 @@ const registerMatchmakingQueueHandlers = (io, socket, onlineUsers) => {
         const blackGameState = onlineGame.getCurrentGameState(usersInGame.black)
         const drawState = onlineGame.getCurrentDrawAgreementState()
         const userState = { white: whiteUserState, black: blackUserState}
+        const chatState = onlineGame.getAllChatMessages()
         
-        io.to(`user:${usersInGame.white}`).emit('game:joined', { gameState: whiteGameState, drawState, userState })
-        io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState: blackGameState, drawState, userState })
+        io.to(`user:${usersInGame.white}`).emit('game:joined', { gameState: whiteGameState, drawState, userState, chatState })
+        io.to(`user:${usersInGame.black}`).emit('game:joined', { gameState: blackGameState, drawState, userState, chatState })
       }
     } else {
       if (result.statusCode === 6) {

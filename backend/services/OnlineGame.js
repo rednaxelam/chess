@@ -18,6 +18,7 @@ class OnlineGame {
     gameState: 0,
     drawState: 0,
   }
+  #chat = []
 
   constructor(userId1, userId2) {
     if (Math.random() < 0.5) {
@@ -209,6 +210,25 @@ class OnlineGame {
     this.#version.gameState++
   }
 
+  chatReceived(playerId, type, content) {
+    const playerColor = this.#getPlayerColor(playerId)
+
+    if (type === 'text') {
+      if (typeof content !== 'string') return
+      else if (Array.from(content).length > 200) return
+    } else if (type === 'emote') {
+      if (!Number.isInteger(content) || (content < 0 || content > 15)) {
+        return
+      }
+    } else {
+      return
+    }
+
+    // it is currently assumed that once added, messages won't be removed or modified
+    const chatObject = { id: this.#chat.length, color: playerColor, type, content}
+    this.#chat.push(chatObject)
+  }
+
   // methods to get state representing the status of the game
 
   getCurrentGameState(playerId) {
@@ -285,6 +305,20 @@ class OnlineGame {
       drawState: this.#version.drawState,
     }
   }
+
+  getLatestChatMessage() {
+    if (this.#chat.length === 0) return undefined
+    else return structuredClone(this.#chat[this.#chat.length - 1])
+  }
+
+  getAllChatMessages() {
+    return structuredClone(this.#chat)
+  }
+
+  getChatMessageCount() {
+    return this.#chat.length
+  }
+
 
   // helper methods
 

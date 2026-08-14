@@ -129,6 +129,27 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     }
   }
 
+  const sendChatMessage = (type, content) => {
+    const userId = socket.request.userId
+
+    const onlineGame = getOnlineGame(io, userId, onlineUsers)
+    if (!onlineGame) return
+
+    const chatMessageCountBefore = onlineGame.getChatMessageCount()
+
+    onlineGame.chatReceived(userId, type, content)
+
+    const chatMessageCountAfter = onlineGame.getChatMessageCount()
+
+    if (chatMessageCountBefore < chatMessageCountAfter) {
+      const usersInGame = onlineGame.getUsers()
+      io.to(`user:${usersInGame.white}`).emit('game:new-chat-message', onlineGame.getLatestChatMessage())
+      io.to(`user:${usersInGame.black}`).emit('game:new-chat-message', onlineGame.getLatestChatMessage())
+    } else {
+      io.to(`user:${userId}`).emit('game:chat-message-rejected')
+    }
+  }
+
   const offerDraw = (drawStateVersion) => handleDrawOperation('playerOffersDraw', drawStateVersion)
 
   const resetDrawOffers = (drawStateVersion) => handleDrawOperation('playerResetsDrawAgreement', drawStateVersion)
@@ -153,8 +174,9 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
     const gameState = onlineGame.getCurrentGameState(userId)
     const drawState = onlineGame.getCurrentDrawAgreementState()
     const userState = { white: whiteUserState, black: blackUserState}
+    const chatState = onlineGame.getAllChatMessages()
 
-    io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState, userState })
+    io.to(`user:${userId}`).emit('game:current-state', { gameState, drawState, userState, chatState })
   }
 
   const recoverGameState = () => {
@@ -213,6 +235,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   socket.on('game:recover-game-state', recoverGameState)
   socket.on('game:recover-draw-state', recoverDrawState)
   socket.on('game:check-version-info', checkVersionInfo)
+  socket.on('game:send-chat-message', sendChatMessage)
 
   // possible emitted events:
   // game:game-state-update
@@ -222,6 +245,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   // game:current-game-state
   // game:current-draw-state
   // game:is-in-sync
+  // game:new-chat-message
   // (error) game:not-found
   // (error) game:finished 
   // (error) game:invalid-move
@@ -230,6 +254,7 @@ const registerOnlineGameHandlers = (io, socket, onlineUsers) => {
   // (error) game:all-state-out-of-sync
   // (error) game:game-state-out-of-sync
   // (error) game:draw-state-out-of-sync
+  // (error) game:chat-message-rejected
 }
 
 module.exports = { registerOnlineGameHandlers }
