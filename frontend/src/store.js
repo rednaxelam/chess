@@ -3,6 +3,7 @@ import localGameReducer from './reducers/localGameReducer'
 import onlineGameReducer from './reducers/onlineGameReducer'
 import onlineUserReducer from './reducers/onlineUserReducer'
 import moveHistoryReducer from './reducers/moveHistoryReducer'
+import gameChatReducer from './reducers/gameChatReducer'
 import errorReducer from './reducers/errorReducer'
 
 import { registerMoveHistoryListeners } from './reducers/moveHistoryReducer'
@@ -17,6 +18,7 @@ const store = configureStore({
     onlineGame: onlineGameReducer,
     onlineUser: onlineUserReducer,
     moveHistory: moveHistoryReducer,
+    gameChat: gameChatReducer,
     error: errorReducer,
   },
   middleware: (getDefaultMiddleware) =>
