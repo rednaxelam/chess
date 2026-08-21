@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, isAnyOf } from '@reduxjs/toolkit'
 import { gameEnded, gameJoined, gameWasNotFound } from './sharedActions'
 import { siteUserStateReceived } from './onlineUserReducer'
 
@@ -39,17 +39,18 @@ const onlineGameSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(gameJoined, (state, action) => {
-        return action.payload
-      })
-      .addCase(gameEnded, (state, action) => {
-        return action.payload
-      })
       .addCase(gameWasNotFound, (state, action) => {
         return null
       })
       .addCase(siteUserStateReceived, (state, action) => {
         if (!action.payload.hasOnlineGame) return null
+      })
+      .addMatcher(isAnyOf(gameJoined, gameEnded), (state, action) => {
+        return {
+          gameState: action.payload.gameState,
+          drawState: action.payload.drawState,
+          userState: action.payload.userState,
+        }
       })
   }
 })
@@ -57,4 +58,3 @@ const onlineGameSlice = createSlice({
 export const { onlineGameStateReceived, onlineGameStateCleared, gameStateReceived, drawStateReceived, gameUserStateReceived } = onlineGameSlice.actions
 
 export default onlineGameSlice.reducer
-
