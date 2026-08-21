@@ -68,5 +68,8 @@ export const emitCheckVersionInfo = () => {
   const gameStateVersion = storeSnapshot.onlineGame.gameState.version
   const drawStateVersion = storeSnapshot.onlineGame.drawState.version
   socket.emit('game:check-version-info', { gameState: gameStateVersion, drawState: drawStateVersion })
+}
 
+export const emitSendChatMessage = (type, content) => {
+  socket.emit('game:send-chat-message', type, content)
 }

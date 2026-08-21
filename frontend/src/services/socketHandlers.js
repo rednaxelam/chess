@@ -7,6 +7,7 @@ import { onlineGameStateReceived,
 import { siteUserStateReceived,
   newUsername,
   newGameStatus, } from '../reducers/onlineUserReducer'
+import { chatMessageReceived } from '../reducers/gameChatReducer'
 import { newErrorState,
   errorStateCleared } from '../reducers/errorReducer'
 import { gameJoined, gameEnded, gameWasNotFound } from '../reducers/sharedActions'
@@ -82,6 +83,7 @@ const registerSocketHandlers = socket => {
   socket.on('game:game-state-update', (gameState) => store.dispatch(gameStateReceived(gameState)))
   socket.on('game:draw-state-update', (drawState) => store.dispatch(drawStateReceived(drawState)))
   socket.on('game:is-in-sync', () => {/*do nothing*/})
+  socket.on('game:new-chat-message', (newChatMessage) => store.dispatch(chatMessageReceived(newChatMessage)))
 
   // error handlers
   socket.on('user:not-found', () => store.dispatch(newErrorState({ type: 'usersError', errorCode: 6 })))
@@ -99,6 +101,8 @@ const registerSocketHandlers = socket => {
   socket.on('game:draw-state-out-of-sync', () => getDrawStateAndDispatchError({ type: 'gameError', errorCode: 6 }))
   socket.on('game:not-found', getUserStateAndDispatchGameWasNotFound)
   socket.on('game:finished', () => getAllCurrentOnlineStateAndDispatchError({ type: 'gameError', errorCode: 5 }))
+  // there is no corresponding error code on the backend for a chat message being rejected
+  socket.on('game:chat-message-rejected', () => store.dispatch(newErrorState({ type: 'gameError', errorCode: 101 })))
 }
 
 export default registerSocketHandlers
