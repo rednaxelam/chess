@@ -18,6 +18,7 @@ import { emitGetUserState,
   emitRecoverDrawState,
   emitCheckVersionInfo,
   emitResign,
+  emitSendChatMessage
 } from '../services/socketEmitters'
 import { useState } from 'react'
 
@@ -45,9 +46,11 @@ function IntegrationTestingPage() {
   const [promoteTo, setPromoteTo] = useState('')
   const [gameStateVersion, setGameStateVersion] = useState('')
   const [drawStateVersion, setDrawStateVersion] = useState('')
+  const [textChatMessage, setTextChatMessage] = useState('')
 
   const onlineUserState = useSelector(({ onlineUser }) => onlineUser)
   const onlineGameState = useSelector(({ onlineGame }) => onlineGame)
+  const gameChatState = useSelector(({ gameChat }) => gameChat)
   const errorState = useSelector(({ error }) => error)
 
   const submitPlayMoveForm = (event) => {
@@ -70,6 +73,8 @@ function IntegrationTestingPage() {
       <p>{JSON.stringify(onlineUserState)}</p>
       <p>Online Game State:</p>
       <p>{JSON.stringify(onlineGameState)}</p>
+      <p>Chat State</p>
+      <p>{JSON.stringify(gameChatState)}</p>
       <p>Error State:</p>
       <p>{JSON.stringify(errorState)}</p>
       <p>Online User Emitters:</p>
@@ -95,6 +100,13 @@ function IntegrationTestingPage() {
       <button onClick={() => emitWantDrawOffers(Number(drawStateVersion))}>emitDrawWantOffers</button>
       <br />
       <TextualInput nom={'drawStateVersion'} state={drawStateVersion} stateUpdater={setDrawStateVersion}/>
+      <br />
+      <div>Chat:</div>
+      <br />
+      <TextualInput nom={'textChatMessage'} state={textChatMessage} stateUpdater={setTextChatMessage}/>
+      <button onClick={() => emitSendChatMessage('text', textChatMessage)}>send chat message</button>
+      <br />
+      <br />
       <br />
       <div>other emitters</div>
       <button onClick={emitRecoverAllOnlineGameState}>emitRecoverAllOnlineGameState</button>
