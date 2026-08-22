@@ -219,11 +219,11 @@ class OnlineGame {
 
     if (this.#chat.length > 999) return
 
-    if (Date.now() - this.#timeOfLastChat[playerColor] < 1000) return 
+    if (Date.now() - this.#timeOfLastChat[playerColor] < 800) return
 
     if (type === 'text') {
       if (typeof content !== 'string') return
-      else if (Array.from(content).length > 200) return
+      else if (Array.from(content).length > 200 || Array.from(content).length === 0) return
     } else if (type === 'emote') {
       if (!Number.isInteger(content) || (content < 0 || content > 15)) {
         return
