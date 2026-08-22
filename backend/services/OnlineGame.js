@@ -19,6 +19,10 @@ class OnlineGame {
     drawState: 0,
   }
   #chat = []
+  #timeOfLastChat = {
+    white: 0,
+    black: 0
+  }
 
   constructor(userId1, userId2) {
     if (Math.random() < 0.5) {
@@ -213,6 +217,10 @@ class OnlineGame {
   chatReceived(playerId, type, content) {
     const playerColor = this.#getPlayerColor(playerId)
 
+    if (this.#chat.length > 999) return
+
+    if (Date.now() - this.#timeOfLastChat[playerColor] < 1000) return 
+
     if (type === 'text') {
       if (typeof content !== 'string') return
       else if (Array.from(content).length > 200) return
@@ -227,6 +235,8 @@ class OnlineGame {
     // it is currently assumed that once added, messages won't be removed or modified
     const chatObject = { id: this.#chat.length, color: playerColor, type, content}
     this.#chat.push(chatObject)
+
+    this.#timeOfLastChat[playerColor] = Date.now()
   }
 
   // methods to get state representing the status of the game
